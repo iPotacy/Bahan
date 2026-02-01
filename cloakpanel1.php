@@ -1,6 +1,6 @@
 <?php
 /*
- 本代码由 DeckPHP V5 pro 创建
+ 本代码由 DeckPHP V5 pro 创建 BROTHERLINE
  创建时间 2026-02-01 16:53:35
  技术支持 Moyu <2763994904@qq.com>
  严禁反编译、逆向等任何形式的侵权行为，违者将追究法律责任
